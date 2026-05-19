@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> - 60 ta Savol va Reyting</title>
+    <title>KUNDUZGI RUS GURUHI 22-AR 4-KURS - Amaliy o'zbek tili</title>
     <style>
         :root { --primary: #00f2fe; --secondary: #4facfe; --correct: #00ff88; --wrong: #ff4b2b; --bg: #0b0e14; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -12,17 +12,18 @@
         .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); display: none; }
         .active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-       
-        input { width: 100%; padding: 15px; margin: 10px 0 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; }
+        
+        input { width: 100%; padding: 15px; margin: 10px 0 20px; border-radius: 12px; border: 1px solid rgba(255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; }
         .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
         .btn-primary { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #000; }
-        .btn-danger { background: rgba(255, 75, 43, 0.2); border: 1px solid var(--wrong); color: var(--wrong); margin-top: 20px; }
+        .btn-success { background: linear-gradient(90deg, #00ff88, #00c868); color: #000; margin-top: 20px; font-size: 1.1rem; }
+        .btn-danger { background: rgba(255, 75, 43, 0.2); border: 1px solid var(--wrong); color: var(--wrong); margin-top: 15px; }
         .counter-badge { background: var(--primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
         .table-container { max-height: 300px; overflow-y: auto; margin: 20px 0; border-radius: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { color: var(--primary); position: sticky; top: 0; background: #1a1d24; }
-       
+        
         tr:nth-child(1) td:first-child { color: #ffd700; font-weight: bold; font-size: 1.2rem; }
         tr:nth-child(2) td:first-child { color: #c0c0c0; font-weight: bold; }
         tr:nth-child(3) td:first-child { color: #cd7f32; font-weight: bold; }
@@ -39,10 +40,9 @@
 <body>
 <div class="container">
     <div id="login-card" class="card active">
-        <h1 style="text-align:center"></h1>
-        <p style="text-align:center; color:#aaa">Tizimga kirish</p>
-        <input type="text" id="user-name" placeholder="Ismingizni kiriting...">
-        <input type="password" id="access-code" placeholder="Kirish kodi ()">
+        <h1 style="text-align:center">Tizimga Kirish</h1>
+        <p style="text-align:center; color:#aaa">Ismingizni kiriting va testni boshlang</p>
+        <input type="text" id="user-name" placeholder="Ismingiz va familiyangiz...">
         <button class="btn btn-primary" onclick="handleLogin()">Kirish</button>
     </div>
 
@@ -65,6 +65,9 @@
         <div id="q-info" style="color:var(--secondary); font-weight:bold; margin-bottom:10px;"></div>
         <h2 id="q-text" style="min-height: 60px; font-size: 1.1rem;"></h2>
         <div class="options" id="opt-box"></div>
+        
+        <button id="next-btn" class="btn btn-success" style="display: none;" onclick="nextQuestion()">Keyingisi ➔</button>
+        
         <button class="btn btn-danger" onclick="finishQuiz()">Testni yakunlash</button>
     </div>
 
@@ -77,181 +80,129 @@
 </div>
 
 <script>
-    const SECRET_CODE = "2026";
     let currentUser = "";
     let score = 0;
     let currentIdx = 0;
 
-       const questions = [
-        { q: "“Agar xar kishi qunt bilan mehnat qilsa, u o‘ziga nisbatan talabchan bo‘lsa, u yaxshi pedagog bo‘lishi mumkin” ushbu fikr kimga tegishli?", a: ["K.D.Ushinskiy", "A.S.Makarenko", "Ya.A.Komenskiy", "I.G.Pestalotsi"], c: 0 },
-        { q: "“Al-Jome-as sahih” asarining muallifi?", a: ["Imom Termiziy", "Imom Buxoriy", "Imom Muslim", "Abu Dovud"], c: 1 },
-        { q: "“Al-kutub as-sita” so’zining manosi nima?", a: ["Oltita kitob", "To'rtta kitob", "Ishonchli to'plam", "Yaxshi hadislar"], c: 0 },
-        { q: "“As-sahih” to‘plami qaysi muhaddis – vatandoshimiz ijodiga mansub?", a: ["Abu Dovud", "Imom Buxoriy", "Imom Termiziy", "Imom Muslim"], c: 1 },
-        { q: "“Bunda so‘fiy xudoning dargohiga erishadi, vasliga vosil boMadi, u bilan birlashadi, shu orqali inson foniy, ya’ni «analhaq» bo‘la oladi” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 3 },
-        { q: "“Buyuk didaktika“, “Onalar maktabi“ asarini kim yozgan?", a: ["Ya.A.Komenskiy", "J.J.Russo", "I.G.Pestalotsi", "D.Lokk"], c: 0 },
-        { q: "“Diniy marosimlar va shariat aqidalarini, taqvolarini aynan, izchil bajarish... qalbni tarbiyalaydi” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 0 },
-        { q: "“Efeblar” qanday muassasa bo‘lgan?", a: ["Boshlang'ich maktab", "Harbiy-siyosiy tarbiya maktabi", "Musiqa maktabi", "Gimnastika maktabi"], c: 1 },
-        { q: "“Ey o’g’il, farzandlaringni tarbiyalashdan oldin o’zingni tarbiyala...” – degan ibora qaysi alloma asarida bayon etilgan.", a: ["Yusuf Xos Hojib", "Kaykovus", "Alisher Navoiy", "Abu Ali ibn Sino"], c: 1 },
-        { q: "“Fozil odamlar shahri” va “Ruhiy madaniyat haqida risola” asarlari muallifi kim?", a: ["Abu Nasr Farobiy", "Abu Rayhon Beruniy", "Ibn Sino", "Al-Xorazmiy"], c: 0 },
-        { q: "“hamma narsaning, butun borliqning asosi - xudo ekanini... anglash... u orif bo'ladi.” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 2 },
-        { q: "“Juvonmardlik asli 3 narsadir...”. Ushbu fikrning muallifi kim?", a: ["Xoja Ahmad Yassaviy", "Najmiddin Kubro", "Kaykovus", "Yusuf Xos Hojib"], c: 2 },
-        { q: "“Muallimi soniy” ya’ni ikkinchi muallim taxallusini olgan alloma kim?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Arastu", "Beruniy"], c: 0 },
-        { q: "“Mudarris“ soʻzini ma’nosi nima?", a: ["O'quvchi", "Dars beruvchi, o'qituvchi", "Yordamchi", "Boshliq"], c: 1 },
-        { q: "“Mudarris ota-onasining mansabi, boyligiga qarab bolaga muomala qilmasligi kerak”. Ushbu fikrlar qaysi allomaga mansub?", a: ["Farobiy", "Beruniy", "Ibn Sino", "Navoiy"], c: 2 },
-        { q: "“Muhaddislar imomi” unvonini olgan muhaddis kim?", a: ["Imom Termiziy", "Imom Muslim", "Imom Buxoriy", "Abu Dovud"], c: 2 },
-        { q: "“nafsni tiyish... ya’ni tariqat - fano, o‘zdan kechish...” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 1 },
-        { q: "“Padarkush“ asari kimni qalamiga mansub?", a: ["Mahmudxo'ja Behbudiy", "Munavvarqori Abdurashidxonov", "Abdulla Avloniy", "Fitrat"], c: 0 },
-        { q: "“Pedagogik mahorat” nima?", a: ["Faqat bilimga ega bo'lish", "Pedagogik san'at va shaxsiy sifatlar yig'indisi", "Darsni vaqtida tugatish", "Ko'p kitob o'qish"], c: 1 },
-        { q: "“Qobusnoma” asari kimning qalamiga masub?", a: ["Nizomulmulk", "Kaykovus", "Yusuf Xos Hojib", "Ahmad Yugnakiy"], c: 1 },
-        { q: "“Qutadg`u bilig” ma`nosi nimani anglatadi?", a: ["Baxtga eltuvchi bilim", "Ezgulik kitobi", "Davlat boshqarish", "Axloq qoidalari"], c: 0 },
-        { q: "“Qutadg‘u bilig” asarining muallifi.", a: ["Ahmad Yugnakiy", "Yusuf Xos Hojib", "Mahmud Qoshg'ariy", "Xoja Ahmad Yassaviy"], c: 1 },
-        { q: "“Ta’lim degan so‘z... nazariy fazilatlarni birlashtirish, tarbiya esa... amaliy ish...” Ushbu ta’rif muallifi?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "Navoiy"], c: 0 },
-        { q: "“Takrorlash bilimning asosidir”, ushbu ibora qaysi pedagogga tegishli?", a: ["Ya.A.Komenskiy", "K.D.Ushinskiy", "I.G.Pestalotsi", "J.J.Russo"], c: 0 },
-        { q: "“Tizim” so’zi haqida tushuncha?", a: ["Tartibsiz narsalar", "O'zaro bog'langan elementlar majmuasi", "Faqat maktab", "Darsliklar"], c: 1 },
-        { q: "“Turkiy Guliston yoxud axloq” asarida komil inson g'oyalari?", a: ["Harbiy bilim", "Axloqiy tarbiya (Yaxshi xulqlar)", "Faqat tijorat", "Tibbiyot bilimlar"], c: 1 },
-        { q: "“Turkiy Guliston yoxud axloq” asarining muallifi.", a: ["Fitrat", "Abdulla Avloniy", "Hamza", "Behbudiy"], c: 1 },
-        { q: "“Ustoz shogirdlariga qattiq zulm ham, haddan tashqari ko’ngilchanlik ham qilmasligi lozim”. Ushbu fikr muallifi?", a: ["Sa'diy Sheroziy", "Ibn Sino", "Alisher Navoiy", "Farobiy"], c: 1 },
-        { q: "“Birinchi muallim”, “Ikkinchi muallim”, “Turkiy guliston” darsliklarini kim yaratgan?", a: ["Abdulla Avloniy", "Mahmudxo'ja Behbudiy", "Munavvarqori", "Hamza"], c: 0 },
-        { q: "“Zafarnoma” asarining muallifi kim?", a: ["Sharafuddin Ali Yazdiy", "Nizomiddin Shomiy", "Amir Temur", "Mirzo Ulug'bek"], c: 0 },
-        { q: "“Ziji ko’ragoniy” asari nusxasini ilk bora Istambulda kim chop ettiradi?", a: ["Ali Qushchi", "Boyazid II", "Murod II", "Sulton Mahmud"], c: 0 },
-        { q: "”Kimga qanday pandu-nasihat, unga avvolo o`zing amal qil” muallifi?", a: ["Yusuf Xos Hojib", "Kaykovus", "Ahmad Yugnakiy", "Navoiy"], c: 0 },
-        { q: "”Mehnat axloqiylikni asosi, saxovatlilik belgisi”-deb qaysi ta`limotda ko`rsatilgan?", a: ["Zardushtiylik", "Islom", "Tasavvuf", "Buddhizm"], c: 2 },
-        { q: "«Bilim olish har bir musulmon ayol va erkakning burchidir» deb yozilgan madrasa?", a: ["Ulug'bek madrasasi", "Sherdor madrasasi", "Tillakori madrasasi", "Kukeldosh"], c: 0 },
-        { q: "«Odob as-solihin» asari muallifi?", a: ["Abdulla Avloniy", "Mahmudxo'ja Behbudiy", "Munavvarqori", "Fitrat"], c: 2 },
-        { q: "«Temur tuzuklari»dagi o‘gitlar turlari?", a: ["Axloq va davlat boshqaruvi", "Faqat harbiy", "Faqat diniy", "Savdo ishlari"], c: 0 },
-        { q: "1913-yilda “Turon” teatr truppasiga asos solgan adib?", a: ["Behbudiy", "Abdulla Avloniy", "Fitrat", "Cho'lpon"], c: 1 },
-        { q: "Abu Ali ibn Sino asarlari to‘g‘ri ko‘rsatilgan qator?", a: ["Al-Qonun, Tib qonunlari", "Kitob ash-shifo, Al-Qonun, Tib qonunlari", "Fozil odamlar shahri", "Zafarnoma"], c: 1 },
-        { q: "Abu Ali ibn Sinoning asarlari?", a: ["Faqat tibbiyotga oid", "Falsafa, tibbiyot, musiqa, pedagogikaga oid", "Faqat matematika", "Faqat astronomiya"], c: 1 },
-        { q: "Ibn Sinoning pedagogik qarashlari bayon etilgan asarlar?", a: ["Tadbiri manzil", "Tib qonunlari", "Kitob ash-shifo", "Barchasi"], c: 3 },
-        { q: "Abu Rayhon Beruniy inson kamolotida uch narsani muhim deydi. Bular?", a: ["Irsiyat, muhit, tarbiya", "Bilim, boylik, kuch", "Nasl, vatan, oziq-ovqat", "Kitob, ustoz, do'st"], c: 0 },
-        { q: "Abu Rayhon Beruniyning pedagogik qarashlari bayon etilgan asarlari?", a: ["Qadimgi xalqlardan qolgan yodgorliklar, Hindiston", "Zafarnoma", "Qobusnoma", "Hayot kitobi"], c: 0 },
-        { q: "Afinada musiqa, ashula o‘rgatilgan maktablar?", a: ["Kifara maktabi", "Grammatika maktabi", "Palestra", "Gimnaziy"], c: 0 },
-        { q: "Ahmad Yugnakiyning asari?", a: ["Hibatul haqoyiq", "Qutadg'u bilig", "Devonu lug'atit turk", "Qirq hadis"], c: 0 },
-        { q: "Akademik qobiliyat nima?", a: ["Tez yugurish", "Bilimlarni tez va oson egallash qobiliyati", "Rasm chizish", "Siyosiy rahbarlik"], c: 1 },
-        { q: "Alisher Navoiy ta’rifi bo‘yicha 'shodliklar kaliti' nima?", a: ["Boylik", "Bilim va odob", "Mehnat", "Saboq"], c: 2 },
-        { q: "Arablar “daryo orti” deb atagan hudud?", a: ["Movarounnahr", "Xuroson", "Eron", "Hindiston"], c: 0 },
-        { q: "Beruniy ta’limotiga ko’ra inson kamolotida muhim omillar?", a: ["Tabiat va jamiyat", "Faqat boylik", "Faqat irsiyat", "Faqat o'yin"], c: 0 },
-        { q: "Birinchilardan bo‘lib sinov-kuzatish metodlariga asos solgan mutafakkir?", a: ["Beruniy", "Ibn Sino", "Farobiy", "Xorazmiy"], c: 0 },
-        { q: "Dastlabki arab tilidagi maktablarga nima ta'sir etadi?", a: ["Islom dini va Qur'on", "Savdo", "Urushlar", "Sayohatlar"], c: 0 },
-        { q: "Diapozon tushunchasi?", a: ["Ovozning eng past va eng yuqori pardalari oralig'i", "Nutq tezligi", "Ovoz tembri", "Musiqa asbobi"], c: 0 },
-        { q: "Diksiya nima?", a: ["Nutq tezligi", "So'zlarning aniq va ravshan talaffuz etilishi", "Ovoz balandligi", "Yuz harakati"], c: 1 },
-        { q: "Qadimda bolalar tarbiyasi tizimini o‘rganishda asos bo‘lgan manba?", a: ["Avesto", "Qur'on", "Injil", "Veda"], c: 0 },
-        { q: "Eng qadimgi madaniy boyliklarni o`rganish necha guruhga bo`lingan?", a: ["3 guruh (Arxeologik, Etnografik, Yozma)", "2 guruh", "4 guruh", "5 guruh"], c: 0 },
-        { q: "Eng qadimgi madaniy yodgorliklarni o'rganishda 3 asosiy manba?", a: ["Ashyoviy, og'zaki, yozma", "Faqat kitoblar", "Faqat rasmlar", "Faqat binolar"], c: 0 },
-        { q: "Eng qadimgi yozma ma’rifiy manbalar?", a: ["Avesto, Orxun-Enasoy yodgorliklari", "Qobusnoma", "Qutadg'u bilig", "Zafarnoma"], c: 0 },
-        { q: "Eramizdan avvalgi birinchi ming yillikda ajdodlarimiz qayerda yashagan?", a: ["Turon, Movarounnahr", "Misr", "Rim", "Xitoy"], c: 0 },
-        { q: "Farobiy qaysi risolasida bilimlarni oʻrganish tartibini sanaydi?", a: ["Ilmlarning kelib chiqishi va tasnifi", "Fozil odamlar shahri", "Musiqa kitobi", "Baxtga erishuv"], c: 0 },
-        { q: "Farobiy ta’lim-tarbiya ishlarini qanday yo‘llar bilan amalga oshirishni deydi?", a: ["Raqobat va jazo", "O'rgatish va ko'nikma hosil qilish", "Faqat kitob o'qish", "Faqat suhbat"], c: 1 },
-        { q: "Farobiyning qaysi asarida davlat rahbarini o’n ikki fazilati ko’rsatiladi?", a: ["Fozil odamlar shahri", "Baxtga erishuv", "Siyosat al-madaniya", "Musiqa"], c: 0 },
-        { q: "Hadis ilmda ”Sahih” yo`nalishini asoschisi kim?", a: ["Imom Buxoriy", "Imom Termiziy", "Imom Muslim", "Abu Dovud"], c: 0 },
-        { q: "Hadis ilmining yaratilishidagi eng oltin davr?", a: ["IX asr", "VII asr", "XI asr", "XV asr"], c: 0 },
-        { q: "Ibn Sino Sharqda qanday unvonga sazovor boʻlgan?", a: ["Shayxur-rais", "Muallimi soniy", "Sultoni hakim", "Hujjatul islom"], c: 0 },
-        { q: "Ibrat taxallusi qaysi jadidga tegishli?", a: ["Ishoqxon Junaydullo o'g'li", "Avloniy", "Fitrat", "Behbudiy"], c: 0 },
-        { q: "Ibtidoiy jamoada tarbiyaga nima sabab bo‘lgan?", a: ["Hayotiy ehtiyoj va mehnat", "Darslar", "Kitoblar", "Siyosat"], c: 0 },
-        { q: "Ibtidoiy jamoa tuzumi necha davrga bo’linadi?", a: ["Matriarxat va Patriarxat", "2 davr", "3 davr", "4 davr"], c: 0 },
-        { q: "Ilg'or pedagogik tajriba nima?", a: ["Yuqori natija beruvchi o'qitish usuli", "Oddiy dars", "Eski metod", "Kitob yozish"], c: 0 },
-        { q: "Imom Buxoriy qachon va qayerda tavvallud topgan?", a: ["810-yil Buxoro", "800-yil Samarqand", "820-yil Termiz", "850-yil Xiva"], c: 0 },
-        { q: "Islom dinida Qur’ondan keyingi mo’tabar manba?", a: ["Hadis", "Fiqh", "Tafsir", "Shariat"], c: 0 },
-        { q: "Izchil kasbiy o‘sish pedagogga xos qanday kompetentlik?", a: ["Autokompetentlik", "Maxsus", "Ijtimoiy", "Metodik"], c: 0 },
-        { q: "Jadidchilik g’oyasini birinchilardan bo’lib kim ilgari surdi?", a: ["Ismoil Gasprinskiy", "Behbudiy", "Avloniy", "Fitrat"], c: 0 },
-        { q: "Kaykovusning “Qobusnoma” asari nechta bobdan iborat?", a: ["44 ta bob", "40 ta bob", "50 ta bob", "30 ta bob"], c: 0 },
-        { q: "Kaykovus “Qobusnoma”da yoshlar saqlanishi lozim bo'lgan sifatlar?", a: ["Yolg'on, kibr, baxillik", "Bilim", "Mehnat", "Jasorat"], c: 0 },
-        { q: "“Qadimgi xalqlardan qolgan yodgorliklar” asarida zardushtiylik haqida kim yozadi?", a: ["Abu Rayhon Beruniy", "Farobiy", "Ibn Sino", "Xorazmiy"], c: 0 },
-        { q: "Kimni “Adiblari adibi”, “Fozillar sardori” deb atashgan?", a: ["Ahmad Yugnakiy", "Navoiy", "Yusuf Xos Hojib", "Zamaxshariy"], c: 0 },
-        { q: "Kommunikativ qobiliyat bu – ?", a: ["Muloqotga kirisha olish", "Bilim berish", "Tashkil qilish", "Yozish"], c: 0 },
-        { q: "Konstruktiv qobiliyat?", a: ["Darsni loyihalash va rejalashtirish", "Gapirish", "Musiqa chalish", "Sport"], c: 0 },
-        { q: "Sinf-dars tizimi qachon va kim tomonidan yaratilgan?", a: ["XVII asr, Ya.A.Komenskiy", "XIX asr, Ushinskiy", "XVIII asr, Russo", "XX asr, Makarenko"], c: 0 },
-        { q: "Markaziy Osiyoda birinchi bo`lib ta`lim-tarbiyaga ta`rif bergan olim?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "Xorazmiy"], c: 0 },
-        { q: "Musulmon maktablari tizimi qachon tashkil topgan?", a: ["VIII-IX asrlar", "VI asr", "XV asr", "XVIII asr"], c: 0 },
-        { q: "Sharqda kimni ”Muallimi soniy” deb ataganlar?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "G'azzoliy"], c: 0 },
-        { q: "Mimika nima?", a: ["Yuz mushaklari harakati", "Qo'l harakati", "Ovoz", "Yurish"], c: 0 },
-        { q: "Mirzo Ulug‘bek qayerlarda madrasalar barpo etgan?", a: ["Buxoro, Samarqand, G'ijduvon", "Xiva", "Toshkent", "Qarshi"], c: 0 },
-        { q: "Mirzo Ulug’bek madrasalarida o‘qish bosqichlari?", a: ["Adno, Avsat, A’lo", "Boshlang'ich, O'rta, Oliy", "1, 2, 3", "Sinfdoshlar"], c: 0 },
-        { q: "Nutq madaniyati nima?", a: ["Nutqning aniqligi, boyligi va tozaligi", "Faqat tez gapirish", "Baland ovoz", "Chet tillarni bilish"], c: 0 },
-        { q: "Nutq ritmi?", a: ["Nutq elementlarining vaqt bo'yicha mutanosibligi", "Ovoz tembri", "Muloqot", "Diksiya"], c: 0 },
-        { q: "O‘qituvchi – bu:", a: ["Maxsus tayyorgarlikka ega bo'lgan ta'lim-tarbiya beruvchi shaxs", "Faqat kitobxon", "Boshliq", "Yozuvchi"], c: 0 },
-        { q: "Bolalarni jamoa bo‘lib o‘qitishni ilmiy asoslab bergan Sharq allomasi?", a: ["Ibn Sino", "Farobiy", "Beruniy", "Navoiy"], c: 0 },
-        { q: "O’qituvchi uchun eng muhim xususiyat?", a: ["Bolalarni sevish va o'z fanini bilish", "Baland ovoz", "Yaxshi kiyinish", "Qattiqqo'llik"], c: 0 },
-        { q: "Odob – bu:", a: ["Insonning xulq-atvori va jamiyatdagi qoidalarga rioya qilishi", "Kitob", "Darslik", "O'yin"], c: 0 },
-        { q: "O'qituvchi axloqiy me'yorlarga rioya qilishi nima deyiladi?", a: ["Pedagogik takt", "Pedagogik texnika", "Pedagogik mahorat", "Pedagogik uslub"], c: 0 },
-        { q: "O'z-o'ziga ta'sir qilish usullari?", a: ["O'z-o'zini ishontirish, buyruq, nazorat", "Jazo", "Raqobat", "Inkor"], c: 0 },
-        { q: "Pedagog mehnatini ilmiy tashkil etish tamoyillari?", a: ["Rejalilik, tejamkorlik, samaradorlik", "Faqat o'qish", "Dam olish", "Sayohat"], c: 0 },
-        { q: "Pedagogik faoliyatning obyekti kim?", a: ["O'quvchi", "Kitob", "Doska", "Ota-ona"], c: 0 },
-        { q: "Pedagogik takt nima?", a: ["O'qituvchining me'yor va odob tuyg'usi", "Dars o'tish", "Yozish", "Sport usuli"], c: 0 },
-        { q: "Pedagogik texnologiyaning maqsadi?", a: ["Ta'lim samaradorligini kafolatlash", "Faqat kompyuterdan foydalanish", "Kitob tarqatish", "Vaqtni cho'zish"], c: 0 },
-        { q: "“Evristik” suhbat metodini kim olib kelgan?", a: ["Sokrat", "Platon", "Aristotel", "Komenskiy"], c: 0 },
-        { q: "Pedagogika tarixi fani nimani o'rgandi?", a: ["Insoniyat jamiyati rivojidagi ta'lim-tarbiya tarixini", "Faqat hozirgi maktabni", "Faqat qonunlarni", "Faqat bolalarni"], c: 0 },
-        { q: "Pedagogika tarixini o’rganish manbalari?", a: ["Yozma yodgorliklar, allomalar asarlari, xalq og'zaki ijodi", "Faqat gazeta", "Faqat internet", "Faqat kino"], c: 0 },
-        { q: "Perseptiv qobiliyat?", a: ["O'quvchining ichki dunyosini tushuna olish", "Yaxshi ko'rish", "Tez yozish", "Baland ovoz"], c: 0 },
-        { q: "Afina davlatida tarbiya bilan shug‘ullanuvchilar?", a: ["Pedagoglar", "O'qituvchilar", "Harbiylar", "Siyosatchilar"], c: 0 },
-        { q: "Sparta davlatida tarbiya bilan shug‘ullanuvchilar?", a: ["Pedonomlar", "Pedagoglar", "Filosoflar", "Ritorlar"], c: 0 },
-        { q: "“Didaktikaning oltin qoidasi” muallifi?", a: ["Ya.A.Komenskiy", "Ushinskiy", "Russo", "Pestalotsi"], c: 0 },
-        { q: "Refleksiya bosqichi nima uchun zarur?", a: ["O'z faoliyatini tahlil qilish uchun", "Dam olish uchun", "Darsni tugatish uchun", "Kitob o'qish uchun"], c: 0 },
-        { q: "“Ona tili” darsligini yaratgan rus pedagogi?", a: ["K.D.Ushinskiy", "Tolstoy", "Makarenko", "Pirogov"], c: 0 },
-        { q: "Ulug‘bek madrasasi peshtoqiga nima bitilgan?", a: ["Bilim olish har bir musulmon uchun farzdir", "Vaqt - qilichdir", "Adolat - najotdir", "Mehnat - baxtdir"], c: 0 },
-        { q: "So‘fiylik ta’limotining bosqichlari?", a: ["Shariat, Tariqat, Ma'rifat, Haqiqat", "O'qish, O'rganish", "Ibodat va mehnat", "Bilim va axloq"], c: 0 },
-        { q: "Zardushtiylik ta’limotining bosh g‘oyasi?", a: ["Ezg'u fikr, ezg'u so'z, ezg'u amal", "Faqat ibodat", "Urush va g'alaba", "Boylik to'plash"], c: 0 },
-        { q: "Turkiy tilda yaratilgan 1-didaktik asar?", a: ["Qutadg'u bilig", "Hibatul haqoyiq", "Qirq hadis", "Turkiy Guliston"], c: 0 },
-        { q: "“Ziji ko’ragoniy” muallifi kim?", a: ["Mirzo Ulug'bek", "Ali Qushchi", "Beruniy", "Xorazmiy"], c: 0 },
-        { q: "“Padarkush” dramasini kim yozgan?", a: ["Behbudiy", "Avloniy", "Fitrat", "Cho'lpon"], c: 0 },
-        { q: "“Shayxur-rais” kim?", a: ["Ibn Sino", "Farobiy", "Beruniy", "G'azzoliy"], c: 0 },
-        // Qolgan savollar 113-153
-        { q: "Al-Xorazmiy qaysi fanga asos solgan?", a: ["Algebra", "Biologiya", "Kimyo", "Geologiya"], c: 0 },
-        { q: "“Astronomiya kaliti” asari muallifi?", a: ["Beruniy", "Ulug'bek", "Ali Qushchi", "Xorazmiy"], c: 2 },
-        { q: "Tarbiyaning maqsadi nima?", a: ["Komil insonni shakllantirish", "Faqat bilim berish", "Ishga joylash", "Sayohat qilish"], c: 0 },
-        { q: "Didaktika nima?", a: ["Ta'lim nazariyasi", "Tarbiya usuli", "Musiqa fani", "Rasm chizish"], c: 0 },
-        { q: "Pedagogik jarayonning asosiy qatnashchilari?", a: ["O'qituvchi va o'quvchi", "Kitob va daftar", "Maktab va bino", "Sinf va parta"], c: 0 },
-        { q: "“Inson kamolotida tarbiya hal qiluvchi rol o'ynaydi” - bu qaysi yo'nalish?", a: ["Pedotsentrizm", "Sotsiologizm", "Biologizm", "Idealizm"], c: 1 },
-        { q: "Aqliy tarbiya nima?", a: ["Bilimlarni egallash jarayoni", "Sport bilan shug'ullanish", "Tozalikka rioya qilish", "Rasm chizish"], c: 0 },
-        { q: "Mehnat tarbiyasining asosi?", a: ["Amaliy faoliyat", "Kitob o'qish", "Dars tinglash", "Uxshashlik"], c: 0 },
-        { q: "Estetik tarbiya?", a: ["Go'zallikni his qilish", "Kuchli bo'lish", "Tez yozish", "Yaxshi yeyish"], c: 0 },
-        { q: "Ekoligik tarbiya?", a: ["Tabiatni asrash", "Kosmosni o'rganish", "Mashina haydash", "Daraxt kesish"], c: 0 },
-        { q: "Huquqiy tarbiya?", a: ["Qonunlarni bilish", "She'r aytish", "Rasm chizish", "Tuzatish"], c: 0 },
-        { q: "Oila tarbiyasining o'rni?", a: ["Ilk tarbiya o'chog'i", "Ikkinchi darajali", "Faqat moddiy ta'minot", "Bilim maskani"], c: 0 },
-        { q: "Shaxs rivojlanishiga ta'sir etuvchi omillar?", a: ["Irsiyat, Muhit, Tarbiya", "Faqat pul", "Faqat maktab", "Faqat vatan"], c: 0 },
-        { q: "Gumanistik pedagogika asosi?", a: ["Insonparvarlik", "Qattiqqo'llik", "Jazolash", "Farq qilmaslik"], c: 0 },
-        { q: "Pedagogik mahorat qismlari?", a: ["Bilim, texnika, takt", "Faqat ovoz", "Faqat kiyim", "Faqat qalam"], c: 0 },
-        { q: "“Ma'naviyat - eng qudratli qurol” fikri kimniki?", a: ["I.Karimov", "Sh.Mirziyoyev", "Fitrat", "Behbudiy"], c: 0 },
-        { q: "Interfaol uslub nima?", a: ["O'zaro hamkorlik", "Faqat ma'ruza", "Mustaqil mutolaa", "Imtihon"], c: 0 },
-        { q: "Modul ta'limi?", a: ["O'quv materialini qismlarga bo'lish", "Faqat bitta kitob", "Yil bo'yi dars", "Darsdan qochish"], c: 0 },
-        { q: "Monitoring nima?", a: ["Doimiy nazorat va tahlil", "Bir marta tekshirish", "Darsni yakunlash", "Tanaffus"], c: 0 },
-        { q: "Pedagogik innovatsiya?", a: ["Yangi g'oya va usullar", "Eski kitoblar", "Oddiy dars", "Doska o'chirish"], c: 0 },
-        { q: "Loyihalash usuli?", a: ["Muayyan muammoni hal etish", "Yodlash", "Ko'chirish", "Uxlab qolish"], c: 0 },
-        { q: "Case-study nima?", a: ["Vaziyatni tahlil qilish", "Rasm chizish", "Sport o'yini", "Kitob sotish"], c: 0 },
-        { q: "Blits-so'rov?", a: ["Tezkor savol-javob", "Uzoq suhbat", "Yozma ish", "Insho"], c: 0 },
-        { q: "Aqliy hujum (Brainstorming)?", a: ["G'oyalar to'plash", "Urishish", "Kitob yozish", "Mashq bajarish"], c: 0 },
-        { q: "Klaster usuli?", a: ["Tarmoqlash (fikrlar bog'liqligi)", "Chiziq chizish", "Raqam qo'yish", "Xulosa"], c: 0 },
-        { q: "Venn diagrammasi?", a: ["Taqqoslash", "Hisoblash", "Rasm chizish", "Bo'yash"], c: 0 },
-        { q: "FSMU usuli?", a: ["Fikr, sabab, misol, umumlashtirish", "Fizika, sport, matematika, uqtirish", "Falsafa, san'at", "Xato"], c: 0 },
-        { q: "Ta'lim turlari nechta?", a: ["9 ta (O'zR qonuniga ko'ra)", "5 ta", "3 ta", "10 ta"], c: 0 },
-        { q: "Kadrlar tayyorlash milliy dasturi maqsadi?", a: ["Raqobatbardosh mutaxassis tayyorlash", "Faqat maktab ochish", "Chet elga yuborish", "Pul ishlash"], c: 0 },
-        { q: "Maktabgacha ta'lim yoshi?", a: ["3-7 yosh", "1-5 yosh", "5-10 yosh", "0-3 yosh"], c: 0 },
-        { q: "Oliy ta'lim bosqichlari?", a: ["Bakalavriat va Magistratura", "Maktab va Kollej", "Litsey", "Kurslar"], c: 0 },
-        { q: "Pedagogik etikada asosiy tushuncha?", a: ["Burch va mas'uliyat", "Maosh", "Mansab", "Dam olish"], c: 0 },
-        { q: "Uzluksiz ta'lim tamoyili?", a: ["Hayot davomida o'qish", "Faqat yoshlikda", "Faqat ishda", "Qisqa muddat"], c: 0 },
-        { q: "O'qitishning ko'rgazmalilik tamoyili?", a: ["Rasmlar va vositalardan foydalanish", "Faqat gapirish", "Kitob yozish", "Eshikni yopish"], c: 0 },
-        { q: "Muammoli ta'lim nima?", a: ["Savollar orqali yechim izlash", "Muammo yaratish", "Darsni qiyinlashtirish", "Xatolik"], c: 0 },
-        { q: "Individual yondashuv?", a: ["Har bir o'quvchi bilan alohida ishlash", "Hamma bilan bir xil", "Jazo berish", "E'tiborsizlik"], c: 0 },
-        { q: "Sokrat suhbati?", a: ["Savol-javob orqali haqiqatni topish", "Ma'ruza", "Yozma bahs", "Sukunat"], c: 0 },
-        { q: "Pedagogik diagnostika?", a: ["O'quvchi holatini aniqlash", "Kasallikni davolash", "Kompyuter tuzatish", "Dars o'tish"], c: 0 },
-        { q: "O'qituvchining nutqi qanday bo'lishi kerak?", a: ["Aniq, ravshan, madaniyatli", "Tez va baland", "Sokin va past", "Shevada"], c: 0 },
-        { q: "O'quv dasturi nima?", a: ["Mavzular ketma-ketligi", "Dars jadvali", "Kundalik", "Xona tartibi"], c: 0 },
-        { q: "Pedagogika fanining predmeti?", a: ["Tarbiya jarayoni", "Faqat bolalar", "Faqat maktab", "Darsliklar"], c: 0 }
+    const questions = [
+        { q: "1. O‘zbek tili……", a: ["Xalqimizning ko‘p asrlik madaniy, ilmiy-ma’rifiy va badiiy tafakkuri, intellektual salohiyatining yorqin va bebaho mahsuli bo‘lgan jahondagi boy va qadimiy tillardan biridir", "Jahondagi boy va qadimiy tillardan biridir", "Intellektual salohiyatining yorqin va bebaho mahsuli", "Xalqimizning ilmiy-ma’rifiy va badiiy tafakkuri"], c: 0 },
+        { q: "4. Oilada, ko‘cha-ko‘yda, insonlarning fikr almashinish jarayonida qo‘llanadigan nutq uslubi...", a: ["so’zlashuv uslub", "rasmiy uslubi", "Ilmiy uslub", "Badiiy uslub"], c: 0 },
+        { q: "5. Ilm-fanga oid nazariy ma’lumotlar ifodalangan matnlar…", a: ["ilmiy matnlar deyiladi", "rasmiy matnlar deyiladi", "Badiiy matnlar deyiladi", "Yozma matnlar deyiladi"], c: 0 },
+        { q: "6. Badiiy asarlarga xos bo‘lib, unda badiiylik, ifodaviylik, ta’sirchanlik kuchli bo‘ladi. Bu uslub inson hayotining barcha tomonlarini qamrab oladi. Bu uslubda tilning barcha imkoniyatlaridan foydalaniladi. Ushbu fikrlar qaysi uslub haqida?", a: ["badiiy uslub", "rasmiy uslub", "Ilmiy uslub", "So‘zlashuv uslubi"], c: 0 },
+        { q: "7. Lotincha so‘z bo‘lib, “xalq, omma” ma’nolarini anglatadi. Davrning eng dolzarb muammolarini omma e’tiboriga televideniya, gazeta-jurnal va radio orqali yetkazadi. Oliy majlis yig‘inlari va turli xil anjumanlarda ushbu nutq uslubidan foydalaniladi. Fikr qaysi uslub haqida?", a: ["publisistik uslub", "rasmiy uslub", "Ilmiy uslub", "So‘zlashuv uslubi"], c: 0 },
+        { q: "8. Tutuq belgisi to‘g‘ri qo‘llangan javobni toping.", a: ["Ishoq", "Ish’oq", "I’shoq", "Is’ho’q"], c: 0 },
+        { q: "9. Qaysi so‘zdagi nuqtalar o‘rnida jarangli, sirg‘aluvchi, lab-tish tovushi yozilsa ham, uning jarangsiz jufti talaffuz qilinadi?", a: ["a..tomat", "a..zal", "ta..silot", "-sha..qat"], c: 0 },
+        { q: "10. Qaysi qatorda quyi keng unlilardan so‘ng talaffuzda tovush orttirilishi kuzatiladigan so‘zlar ko‘rsatilgan? 1) radio; 2) said; 3) okean; 4) saodat; 5) doimo; 6) taajjub; 7) shoira", a: ["2, 5, 7", "1,2, 5, 7", "1, 2, 3, 5", "2, 4, 5, 6, 7"], c: 0 },
+        { q: "11. Quyidagi qaysi so‘zlarda nuqtalar o‘rniga “o” yoziladi? 1) m..bodo; 2) s..mon; 3) t..mosha; 4) j..hongir; 5) h..mon; 6) s..vob", a: ["1, 2, 3, 4, 5, 6", "2,3,4,5,6", "1, 2, 3", "2, 3"], c: 0 },
+        { q: "12. Qaysi javobda yasama so‘zlar berilgan?", a: ["baliqpaz, toshloq, ishchi", "sovuqqon, badavlat, maktab", "kitob, yo‘llar, chiqar", "suv, ma’naviy, keltir"], c: 0 },
+        { q: "14. Zid ma’noli so‘zlarni toping.", a: ["katta-kichik", "tinch-totuv", "Ozg‘in-oriq", "yosh-yosh"], c: 0 },
+        { q: "15. Siyosiy subyektlarning nomlarini anglatuvchi ijtimoiy-siyosiy leksika berilgan qatorni toping.", a: ["Prezident, vazir, deputat", "Savdogar, dehqon, choysho’r", "gulchi,farrosh,suxandon", "novvoy,otboqar,baliqchi"], c: 0 },
+        { q: "16. Adabiyot san’atiga oid terminlarni toping.", a: ["epizod, komediya, tragediya", "komediya, roman,vokal", "opera, simfoniya,portret", "daromad,inflatsiya, roman"], c: 0 },
+        { q: "18. Shevalar adabiy tildan qaysi jihatlari bilan farq qiladi?", a: ["Leksik,fonetik,grammatik", "fonetik, leksik, rammatik,sintaksis", "Grammatik", "fonetik, yozma"], c: 0 },
+        { q: "19. Qaysi javobda shevaga xos so‘zlar berilgan?", a: ["kelopti, borvotti, aytovuz", "ushbu,kitob,daftar", "bu yoqqa, ana u yerda", "oliynasab, mujgon, go‘ja"], c: 0 },
+        { q: "20. Maqola qaysi uslublarga xos?", a: ["ilmiy,publisistik", "rasmiy, badiiy", "badiiy, ilmiy", "so‘zlashuv,ilmiy"], c: 0 },
+        { q: "22. Adabiy tilga xos so‘zlarni toping.", a: ["kelyapman", "Nalug", "Ishkop", "Ketuttiman"], c: 0 },
+        { q: "23. Adabiy til uchun me’yor sanaladigan so‘zlarni toping.", a: ["tuxum, chumoli, beshik", "inak, uy, o‘jak", "g‘o‘ra, qarinja, mayak", "takya, uchak, shoti"], c: 0 },
+        { q: "25. Qaysi uslubda qaror qilindi, inobatga olinsin, ijro uchun qabul qilinsin, tasdiqlandi kabi qoliplashgan so‘z va so‘z birikmalari keng qo‘llaniladi?", a: ["rasmiy uslubda", "badiiy uslubda", "ommabop uslubda", "ilmiy uslubda"], c: 0 },
+        { q: "26. Ijtimoiy-siyosiy atamalar va atama birikmalari (fuqarolik burchi, iqtisodiy tejamkorlik, siyosiy vaziyat, hukumat tangligi, va h.k.) qaysi uslubni shakllantiruvchi vositalar sanaladi?", a: ["publisistik uslub", "ilmiy uslub", "rasmiy uslub", "so‘zlashuv uslubi"], c: 0 },
+        { q: "27. Qaysi uslubni monografiya, ilmiy maqola, dissertatsiya, avtoreferat kabilar tashkil etadi?", a: ["ilmiy uslub", "badiiy uslub", "rasmiy uslub", "ommabop uslub"], c: 0 },
+        { q: "28. Qaysi uslubda “muxbirimiz xabar berishicha”, “elchixona xodimining so‘ziga ko‘ra”, “muxbirimiz voqea ro‘y bergan joydan xabar beradi” kabi iboralar qo‘llaniladi?", a: ["publisistik uslub", "badiiy uslub", "ilmiy uslub", "rasmiy uslub"], c: 0 },
+        { q: "29. Qaysi qatorda ilmiy uslubga xos gap berilgan?", a: ["Ega va kesim gapning rammatik asosi hisoblanadi.", "Seni hur va ozod kuylaymen.", "Saxiylik va olijanoblik ulug‘vor fazilatdir", "Nedin g‘amnok ko‘rinasiz?"], c: 0 },
+        { q: "30. Ariqlarda suvlar qaymoq bog‘lagan. Berilgan gap qaysi uslubga xos?", a: ["badiiy uslub", "ilmiy uslub", "publitsistik uslub", "rasmiy uslub"], c: 0 },
+        { q: "31. Badiiy uslubga xos gapni aniqlang.", a: ["butun osmonni bulutlarning og‘ir, qalin, qoramtir namati qoplagan.", "Stakanlarning ikkovida ham rangli eritma bor.", "Ma’lumotnoma tuman hokimiyatiga ko‘rsartish uchun berildi", "Sen menga: “ovqating undog‘, ovqating mundog‘ – degan gapni- ilaverma"], c: 0 },
+        { q: "32. Qaysi uslub turida tilning tasviriy-ta’siriy vositalari yordami bilan obrazlar vositasida kishiga estetik ta’sir ko’rsatiladi?", a: ["badiiy uslubda", "rasmiy uslubda", "ilmiy uslubda", "publitsistik uslubda"], c: 0 },
+        { q: "35. Axloqiy jihat kasbiy faoliyat jarayonida odamlarning………….asoslanadi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["Axloqiy munosabatlari sohasiga, axloqiy va qadriyatlariga, xulq-atvor ko‘rsatmalariga, kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy mezonlariga", "ularning axloqiy va qadriyatlariga", "xulq-atvor ko‘rsatmalariga", "kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy-axloqiy mezonlariga asoslanadi"], c: 0 },
+        { q: "36. O‘zbek tilining asoschisi kim?", a: ["xalq", "fitrat", "Abdulla Avloniy", "Abdulla Qodiriy"], c: 0 },
+        { q: "37. O‘zbek tilida nechta unli tovush bor?", a: ["6 ta: a,i,u,o,o‘e", "4 ta: a,I,u,o", "6 ta: a,I,u,o,b,v", "6 ta: a,I,u,k,b,v"], c: 0 },
+        { q: "38. O‘zbekistonda jinsi, irqi, millati, tili, dini, ijtimoiy kelib chiqishi, e’tiqodi, shaxsiy va ijtimoiy mavqeyidan qat’I nazar, har kimga ta’lim olish uchun teng ………. Kafolatlanadi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["huquqlar", "gapirishlar", "Tinglashlar", "Internetga kirishlar"], c: 0 },
+        { q: "39. Oʻzbekistonda maktabda oʻqish …………… hisoblanadi. Nuqtalar o‘rniga mos so‘zni qo‘ying", a: ["majburiy", "Ixtiyoriy", "Beixtiyor", "Bilmadim"], c: 0 },
+        { q: "40. Ta’lim tizimi yagona va uzluksiz bo‘lib, qaysi ta’lim turlari mavjud?: 1) maktabgacha ta’lim va tarbiya; 2) umumiy o‘rta; 3) o‘rta maxsus ta’lim; 4) professional ta’lim; 5) oliy ta’lim; 6) oliy ta’limdan eying ta’lim; 7) kadrlarni qayta tayyorlash va ularning malakasini oshirish; 8) maktabdan tashqari ta’lim.", a: ["1,2,3,4,5,6,7,8.", "1,2,3,4", "1,5,6,7,8", "2,3,4,8"], c: 0 },
+        { q: "41. Badiiy asar qahramonlarining o‘z-o‘ziga yoki o‘zgalarga qaratilgan nutqi……", a: ["monologik nutq", "og’zaki nutq", "Diologik nutq", "Yozma nutq"], c: 0 },
+        { q: "43. Tarbiyaning maqsad va vazifalari borasida muayyan xalqning hayotiy tajribasi hamda turmush tarzida shakllangan amaliy qarashlar majmui; muayyan jamiyatda yashash uchun har bir odam amal qilishi shart sanalgan va urf odat, udum, xulq odob, marosim, anʼana, turmush tarzi, badiiy ijod, o‘yin singari empirik vositalarda namoyon buladigan amaliy faoliyat bu………..", a: ["xalq pedagogikasi", "so’zlash pedagogikasi", "bolalar pedagogikasi", "yoshlar pedagogikasi"], c: 0 },
+        { q: "44. Abdulla Avloniy qalamiga mansub xalq pedagogikasining noyob durdonasini ko‘rsating", a: ["“Turkiy guliston yoxud axloq”", "“Xamsa”", "“Qutadg‘u bilig”", "“Devonu lug‘ot it turk”"], c: 0 },
+        { q: "46. Musaffo osmon uzra tinchlik ramzi oq kabutarlar parvoz qilar edi. Berilgan gap qaysi uslubga xos?", a: ["badiiy uslub", "publisistik uslub", "ilmiy uslub", "rasmiy uslub"], c: 0 },
+        { q: "47. Akademik yozuvning og‘zaki shakli nima deb ataladi?", a: ["akademik nutq", "nutq", "so‘zlashuv uslubi", "rasmiy matn"], c: 0 },
+        { q: "48. “Tarbiya biz uchun yo hayot, yo mamot, yo halokat, yo najot…” deb boshlanuvchi fikr egasi kim?", a: ["Abdulla Avloniy", "Alisher Navoiy", "Fitrat", "Ibrat"], c: 0 },
+        { q: "49. O‘zbek adabiy tili necha ko‘rinishga ega va ular qaysilar?", a: ["2 ga: og‘zaki,yozma", "3 ga: og‘zaki va yozma,suhbat", "4 ga: og‘zaki,yozma,suhbat,tinglash", "Barcha javoblat to‘g‘ri"], c: 0 },
+        { q: "50. “Apteka” so‘zining o‘zbekcha muqobilini belgilang", a: ["Dorixona", "Tijorat", "Do‘kon", "Bank"], c: 0 },
+        { q: "51. Xalq pedagogikasining rivojlanishi uchun sabab bo‘luvchi omillarni toping.", a: ["barcha javob to‘g‘ri", "din", "tashqi ta’sirlar", "urf-odatning o‘zgarishi"], c: 0 },
+        { q: "52. Quyida keltirilgan qatorda imloviy jihatdan xato yozilgan qatorni belgilang", a: ["halq, baht", "bahor, mehnatkash", "ko‘hlik, bel", "san’atkor, bastakor"], c: 0 },
+        { q: "53. Quydagi matn qaysi uslub namunasi hisoblanadi? Fonetika-grekcha so‘zdan olingan bo‘lib,nutq tovushlarini o‘rganuvchi tilshunoslik bo‘limi sanaladi.", a: ["ilmiy uslub", "badiiy uslib", "rasmiy uslub", "ommabop uslub"], c: 0 },
+        { q: "54. …….. turida tilning tasviriy-ta’siriy vositalari yordami bilan obrazlar vositasida kishiga estetik ta’sir ko’rsatiladi. Nuqtalar o‘rniga mos uslub turini qo‘ying.", a: ["badiiy uslubda", "rasmiy uslubda", "ilmiy uslubda", "publitsistik uslubda"], c: 0 },
+        { q: "55. So‘zlashuv uslubi……….jarayonida qo‘llanadigan nutq uslubi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["Barcha javoblar to‘g‘ri", "Oilada, ko‘chada, insonlarning og‘zaki tarzda fikr almashishi", "Ko‘chada", "Insonlarning og‘zaki tarzda fikr almashishida"], c: 0 },
+        { q: "56. Badiiy uslubga xos gapni aniqlang.", a: ["Qorong‘u kechada ko‘kka ko‘z tikib, Eng yorug‘ yulduzdan seni so‘rayman", "Stakanlarning ikkovida ham rangli eritma bor.", "Ma’lumotnoma tuman hokimiyatiga ko‘rsartish uchun berildi.", "Sen menga: “ovqating undog‘, ovqating mundog‘ – degan gapni-ilaverma"], c: 0 },
+        { q: "57. Pasport, tug‘ilganlik haqidagi guvohnoma, nikohni qayd etish hujjatlari qaysi uslubda yoziladi?", a: ["rasmiy", "ilmiy", "ommabop", "so‘zlashuv"], c: 0 },
+        { q: "58. Rasmiy uslubning qaysi turida qonun va farmonlar yaratiladi?", a: ["sof qonunchilik", "rasmiy-diplomatik", "idoraviy-devonxona", "barcha turida yaratiladi"], c: 0 },
+        { q: "59. Ma’lum bir shaxs tomonidan o‘z shaxsiy hayoti va faoliyati haqida bayon qilingan yozuv nomi keltirilgan qatorni belgilang", a: ["tarjimai hol", "qo’llanma", "vasiyatnoma", "ko‘rsatma"], c: 0 },
+        { q: "60. Muassasa yoki ayrim shaxslar faoliyati bilan bog‘liq biron-bir bo‘lib o‘tgan voqea, hodisa, ish-harakatni yoki mevcut holatni tasdiqlash, unga guvohlik berish maqsadida bir necha kishi tomonidan tuzilgan hujjat turi qanday nom bilan ataladi?", a: ["dalolatnoma", "ko‘rsatma", "vasiyatnoma", "qo‘llanma"], c: 0 },
+        { q: "61. Muayyan muassasa yoki ayrim shaxs o‘z nomidan ish ko‘rish uchun ikkinchi bir shaxsga ishonch bildiradigan yozma vakolat turi, bu……..", a: ["ishonchnoma", "vasiyatnoma", "ko‘rsatma", "qo‘llanma"], c: 0 },
+        { q: "63. Ko‘rik, tanlov, musobaqa va boshqalarga nisbatan qaysi hujjat turi tuziladi?", a: ["nizom", "yo‘riqnoma", "dalolatnoma", "guvohnoma"], c: 0 },
+        { q: "65. Shartnoma bu…..", a: ["ikki yoki undan ortiq tomonning fuqarolik huquqlari va majburiyatlarini belgilash, o‘zgartirish yoki to‘xtatish yo‘lidagi kelishuvidir.", "Bir kishining fuqarolik huquqlaridir", "dalolatnomadir", "nizomdir"], c: 0 },
+        { q: "66. Farmoyish hujjatlari nimalar asosida yuzaga keladi?", a: ["Tashkilot rahbarlarining buyruq, ko‘rsatma, farmoyishi, qarorlari asosida yuzaga keladi", "Tashkilot rahbarlarining buyruqlari asosida yuzaga keladi", "Tashkilot rahbarlarining ko‘rsatmalari asosida yuzaga keladi", "Tashkilot rahbarlarining qarorlari asosida yuzaga keladi"], c: 0 },
+        { q: "68. Idoraviy devonxona hujjatlariga nimalar kiradi?", a: ["Ariza,bayonnoma,bildirishnoma,vasiyatnoma,dalolatnoma,ishonchnoma,ma’lumotnoma, tafsifnoma, tavsiyanoma, taklifnoma, tarjimai hol,tushuntirish xati, e’lon, hisobot.", "Ariza, bayonnoma, bildirishnoma", "Vasiyatnoma, dalolatnoma, ishonchnoma", "Taklifnoma, tarjimai hol, tushuntirish xati, e’lon, hisobot."], c: 0 },
+        { q: "69. Arizaning zaruriy qismlariga qaysilar kiradi?", a: ["Ariza yo‘llangan muassasaning yoki mansabdor shaxsning nomi,ariza yozuvchining turar joyi,vazifasi,ismi,otasining ismi familyasi,hujjatning nomi( ariza),matn ( takilif,iltimos,shikoyat),ilova ( agar zarur deb bilsa),ariza yozuvchining imzosi,ismi va otasining ismi bosh harflari,familyasi,ariza yozilgan vaqt ( yil,kun,oy)", "Ariza yo‘llangan muassasaning yoki mansabdor shaxsning nomi", "Ariza yozuvchining turar joyi, vazifasi, ismi, otasining ismi familyasi", "Hujjatning nomi( ariza),matn ( takil,iltimos,shikoyat),ilova ( agar zarur deb bilsa)"], c: 0 },
+        { q: "70. Doimiy ish ko‘ruvchi organlar (ilmiy kengash va boshqalar), shuningdek vaqtinchalik ish ko‘ruvchi organlar (konferensiyalar, yig‘ilishlar, anjumanlar, komissiyalar) faoliyatida, albatta, ………. Yozilishi kerak. Nuqtalar o‘rniga mos hujjat turini qo‘ying.", a: ["Bayonnoma", "Dalolatnoma", "Ko‘rsatma", "Qo‘llanma"], c: 0 },
+        { q: "71. Bayonnoma yozishni tashkil qilish kimning asosiy vazifasi sanaladi?", a: ["kotibning", "raisning", "Suhbatdoshning", "Kitobxonning"], c: 0 },
+        { q: "72. Muayyan muassasa ( tarkibiy qism ) rahbariga xizmat faoliyati bilan aloqador muhim masalalar yuzasidan yoki yuqori idora, mansabdor shaxsga biron-bir voqea va hodisa haqida xabar berish zaruriyati tug‘ilganda taqdim etiladigan mufassil yozma axborot, bu…….dir. Nuqtalar o‘rniga mos hujjat turini qo‘ying", a: ["bildirish", "ko’rsatma", "Dalolatnoma", "Qo‘llanma"], c: 0 },
+        { q: "73. Elektron hujjat aylanishi nimalardan iborat bo‘ladi?", a: ["Elektron hujjatlarni internet orqali jo‘natish va qabul qilib olishdan", "Yozuv xatidan", "Suhbat xatidan", "Tinglashdan"], c: 0 },
+        { q: "75. Tashkiliy hujjatlarning turlari to‘g‘ri berilgan qatorni belgilang", a: ["Guvohnoma, yo‘riqnoma,nizom,qoida,ustav,shartnoma", "Guvohnoma", "Yo‘riqnoma,nizom.", "Ustav, shartnomalar"], c: 0 },
+        { q: "76. Muayyan shaxsning xizmat va boshqa holatlarini, shuningdek biror ishga ( masalan taftish o‘tkazishga) oid vakolatini ko‘rsatuvchi hujjat, bu…..", a: ["Guvohnomadir", "Maktabni bitirganlik haqidagi guvohnoma", "Tug‘ilganlik haqidagi guvohnoma", "Pasport olish haqidagi guvohnoma"], c: 0 },
+        { q: "77. Qonun yoki boshqa me’yoriy hujjatlarni tushuntirish maqsadida chiqariladigan huquqiy hujjat, bu….", a: ["yo’riqnoma", "Guvohnoma", "Dalolatnoma", "Nizom"], c: 0 },
+        { q: "80. Hujjatchilikka doir matnlar doimo … masalasiga alohida e’tibor beradi. Nuqtalar o‘rniga mos jumlani qo‘ying.", a: ["Adabiy til me’yorlari", "suhbatga", "tinglashga", "barcha javoblar to‘g‘ri"], c: 0 },
+        { q: "81. “Spravka” ma’nosini qanday nom bilan ifoda etish mumkin?", a: ["Ma’lumotnoma”", "guvohnoma”", "Bildirish”", "Daloalatnoma"], c: 0 },
+        { q: "82. Rasmiy ish uslubida qanday so‘zlar ishlatilmaydi?", a: ["Kichraytirish-erkalash qo‘shimchalarini olgan so‘zlar, ko‘tarinki-tantanovor so‘zlar, shevaga oid so‘zlar, bachkana, dag‘al so‘zlar, tor doiradagi kishilar tushunadigan so‘zlar, o‘xshatish, jonlantirish, mubolag‘a, istiora, tashxis kabi obrazli tafakkur ifodasi uchun xizmat qiluvchi usullar", "Kichraytirish-erkalash qo‘shimchalarini olgan so‘zlar, ko‘tarinki-tantanovor so‘zlar", "Shevaga oid so‘zlar, bachkana, dag‘al so‘zlar, tor doiradagi kishilar tushunadigan so‘zlar", "O‘xshatish, jonlantirish, mubolag‘a, istiora, tashxis kabi obrazli tafakkur ifodasi uchun xizmat qiluvchi usullar"], c: 0 },
+        { q: "83. Hujjat matni qanday talablarga javob berishi kerak?", a: ["Aniqlik, ixchamlik, lo‘ndalik, mazmuniy to‘liqlik talablariga javob berishi kerak", "Aniqlik, ixchamlik bo‘lishi kerak", "Lo‘ndalik, mazmuniy to‘liqlik", "Emotsional ta’sirchan"], c: 0 },
+        { q: "86. O‘zbek tili qanday lahjalarga ega?", a: ["o‘g‘uz, qipchoq, qarluq", "qipchoq, o‘g‘uz", "dialekt", "qarluq, qipchoq"], c: 0 },
+        { q: "88. Adabiy til uchun qaysi hudud shevalari asos qilib olingan?", a: ["Farg‘ona va Toshkent", "Andijon va Xorazim", "Namangan va Surxondaryo", "Qoraqalpoq va Andijon"], c: 0 },
+        { q: "89. Quydagi matn qaysi uslub namunasi hisoblanadi? Yomg‘ir – suyuq tomchi holidagi atmosfera yog’ini. Tomchining iametric 0, 50, 6 mm bo‘ladi.", a: ["ilmiy uslub", "rasmiy uslub", "badiiy uslub", "publitsistik uslub"], c: 0 },
+        { q: "90. Dars jarayonidagi nazariyalar bayoni va konferensiyalarda qo‘llanadigan nutq shakli nima deb ataladi?", a: ["Akademik nutq", "Akademik yozuv", "So‘zlashuv uslubi", "Badiiy uslub"], c: 0 },
+        { q: "91. Axborotni badiiy shaklda beruvchi uslub turi qaysi?", a: ["Badiiy publitsistika", "Badiiy uslub", "Publitsistik uslub", "So‘zlashuv uslubi"], c: 0 },
+        { q: "93. O‘zbek tilida nechta uslub bor?", a: ["5 ta", "4 ta", "3 ta", "6 ta"], c: 0 },
+        { q: "94. Umumiy o‘rta ta’lim nechanchi sinflarni o‘z ichiga oladi?", a: ["1-11-sinf", "9-11-sinflar", "5-11-sinflar", "1-4-sinflar"], c: 0 },
+        { q: "96. Kasbiy faoliyat jarayonida odamlarning axloqiy munosabatlari sohasiga, ularning axloqiy va qadriyatlariga, xulq-atvor ko’rsatmalariga, kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy-axloqiy mezonlariga asoslanadigan jihat qaysi?", a: ["axloqiy jihat", "sotsiologik jihat", "Iqtisodiy jihat", "Psixologik jihat"], c: 0 },
+        { q: "97. Tilni nima uchun ijtimoiy hodisa sifatida baholanadi?", a: ["Jamiyatda kishilarning munosabatga kirishishiga xizmat qilgani uchun", "Tarixiy hodisa bo‘lgani uchun", "Yangilanib turgani uchun", "Eskirishi mumkinligi uchun"], c: 0 },
+        { q: "98. Nutqining kommunikativ sifatlariga nimalar kiradi?", a: ["Barcha javob to‘g‘ri", "Aniqlik, tushunarlilik", "To‘g‘rilik, mantiqiylik", "Ifodalilik, soflik"], c: 0 },
+        { q: "102. O‘zbekistonda ta’lim tizimi qanday?", a: ["Uzluksiz", "Tadrijiy", "Ixtiyoriy", "Majburiy"], c: 0 },
+        { q: "103. O‘quvchilarga dastlabki bilim va savodxonlik bo‘yicha ko‘nikmalar ta’limning qaysi shaklida beriladi?", a: ["Boshlang‘ich ta’limda", "O‘rta ta’limda", "Tayanch o‘rta ta’lim", "Maktabgacha ta’lim"], c: 0 },
+        { q: "106. Yakka shaxsga ishora qilib hurmat ma’nosni ifodalagan ular olmoshi qatnashgan javobi aniqlang.", a: ["Sobir tog‘amni yaxshi ko‘raman. Ular biznikiga bir yilda bir keladilar", "Sakkizinchi sinf o‘quvchilari faol. Ular har bir tadbirda o‘z chiqishlari bilan ishtirok etishadi", "Ularning har ikkisi bugungi musobaqada ilk marotaba qatnashmoqda.", "Yer yuzida tillar ko‘p. Olimlarning hisob-kitobiga ko‘ra ularning miqdori 7000 ga yaqin."], c: 0 },
+        { q: "107. O‘smirlarimiz xalqaro turnirlarda g‘alaba qozonmoqdalar. O‘zbekning dovrug‘ini olamga yoymoqdalar. Ushbu gapda yoymoq so‘zi qaysi ma’noda qo‘llangan?", a: ["Mashhur qilmoq, ovoza qilmoq", "Tevarak-atrofga taralmoq, anqimoq.", "Baqirib ovoza qilmoq", "Kichik-kichik guruhlarga bo‘linib ketmoq."], c: 0 },
+        { q: "112. Shevaga oid so‘zlar qaysi uslubda qo‘llanmaydi?", a: ["rasmiy uslubda", "badiiy uslubda", "Publitsistik uslubda", "So‘zlashuv uslubida"], c: 0 },
+        { q: "113. Nima uchun badiiy uslubda so‘zlashuv uslubi namunalaridan foydalaniladi?", a: ["Barcha javob to‘g‘ri", "Qahramonning muayyan hududga mansubligini ta’kidlash", "Mahalliy koloritni yaratish", "Hayotning ealistic tasvirini chizishga yordam beradi"], c: 0 },
+        { q: "115. Dunyo hamjamiyati, mustaqil mamlakatlar hamdo‘stligi, mustaqillikni mustahkamlash. Mazkur qoliplashgan nutq shakllari qaysi uslubga xos?", a: ["Ommabop uslub", "So‘zlashuv uslub", "Rasmiy uslub", "Badiiy uslub"], c: 0 },
+        { q: "117. Adabiy til me’yorlariga qat’iy amal qilingan so‘zlashuv uslubi qanday nom bilan ataladi?", a: ["Adabiy so‘zlashuv uslubi", "Oddiy so‘zlashuv uslubi", "So‘zlashuv uslubi adabiy til qoidalariga rioya qilmaydi", "Barcha javob trg‘ri"], c: 0 },
+        { q: "118. So‘zlashuv uslubi odatda qanday shaklda namoyon bo‘ladi?", a: ["Diolog va monolog", "Diolog", "Monolog", "To‘g‘ri javob mavjud emas"], c: 0 },
+        { q: "119. “Tilshunoslarning fikriga ko‘ra, bunday matnlarni yozishda yuzaga keladigan asosiy qiyinchilik gipoteza va nazariyalarni oqilona isbotlash zarurati, shuningdek tizimli rivoyatning ahamiyati bilan bog‘liq”. Ushbu fikrlar qaysi matn shakli haqida?", a: ["Ilmiy matn", "Ommabop matn", "Badiiy matn", "Barcha matnlar shunday xususiyatga ega"], c: 0 },
+        { q: "120. Glossariy nima?", a: ["Atamalarning izohli lug‘ati", "Tarjima lug‘at", "So‘zlarning qomusiy izohi", "Nazariya"], c: 0 },
+        { q: "122. Qaysi xalqlarning pedagogikasi bir xil?", a: ["Hech bir xalqning pedagogikasi bir-birini takrorlamaydi", "Xitoy va koreys", "German va yegipet", "Ingliz va o‘zbek"], c: 0 },
+        { q: "123. Xalq hayotida eng sekin o‘zgaradigan narsa nima?", a: ["Xalq pedagogikasi", "Kiyinish odati", "Turmush-tarzi", "Oilaviy qadriyatlari"], c: 0 },
+        { q: "125. Muayyan bir masalani o‘z ichiga oladigan hujjatlarga nima deb ataladi?", a: ["Sodda xujjatlar", "Murakkab xujjatlar", "Aralash xujjatlar", "Jamlanma hujjatlar"], c: 0 },
+        { q: "126. Ikki yoki undan ortiq masalani o‘z ichiga oladigan xujjatlar qanday nom bilan ataladi?", a: ["Murakkab xujjatlar", "Sodda xujjatlar", "Qolipli xujjatlar", "Na’munaviy xujjatlar"], c: 0 },
+        { q: "128. Qolipli hujjatlar - ?", a: ["Barcha javoblar to‘g‘ri", "Odatda, oldindan tayyorlangan bosma ish qog‘ozlariga yoziladi", "Ikki turli axborot aks etadi", "O‘zgarmas"], c: 0 },
+        { q: "129. Qanday matnlardagi jumlalarni o‘chirish yoki o‘zgartirish mumkin emas?", a: ["Hujjatlardagi", "Badiiy matnlar", "Publitsistik", "Har qanday matnni o‘zgartirish mumkin"], c: 0 },
+        { q: "130. Radio va televideniyada chiqayotgan siyosiy sharhlovchilar, notiqlarning nutqlari publitsistik uslubning qaysi shakliga kiradi?", a: ["Og‘zaki shakli", "Yozma shakli", "Internet publitsistikasi", "Ommabop publitsistika"], c: 0 },
+        { q: "131. Sharqda X–XIX asrlarda qanday xujjat turlari keng qo‘llangan?", a: ["barcha javoblar to‘g‘ri", "yorliq, farmon, noma", "bitimlar, arznoma,", "qarznomalar, vasiqa, tilxat"], c: 0 },
+        { q: "132. Qaysi matn namunasi axborotni xolis aks ettiradi?", a: ["Rasmiy matn", "Publitsistik matn", "Badiiy matn", "Adabiy matn"], c: 0 },
+        { q: "133. Nisbatan uzun jumlalar qaysi matn shaklida mavjud bo‘lmaydi?", a: ["Rasmiy matn", "Publitsistik matn", "Badiiy matn", "Adabiy matn"], c: 0 },
+        { q: "136. Faqat birsub masala yuzasidan tuzilgan hujjatlar mazmuniga ko‘ra qanday hujjatlar sirasiga kiradi?", a: ["Sodda", "Murakkab", "Tashqi", "Ichki"], c: 0 },
+        { q: "137. Ma’lum bir muassasaning o‘zidagina yaratiladigan hujjatlar yaratilish o‘rniga ko‘ra qanday nom bilan ataladi?", a: ["Ichki", "Tashqi", "Umumiy", "Alohida"], c: 0 },
+        { q: "139. Bayon shakliga ko‘ra qanday hujjatlarning erkin yaratiladi?", a: ["Xususiy", "Qolipli", "Namunaviy", "Sodda"], c: 0 },
+        { q: "140. Muassasadagi ko‘p takrorlanuvchi muammolarni bartaraf etish yuzasidan tayyorlangan hujjatlar bayon shakliga ko‘ra qanday nom bilan ataladi?", a: ["Namunaviy", "Xususiy", "Qolipli", "Sodda"], c: 0 },
+        { q: "141. Safar guvohnomalari bayon shakliga ko‘ra qanday nom bilan ataladi?", a: ["Qolipli", "Xususiy", "Namunaviy", "Murakkab"], c: 0 },
+        { q: "142. Bayon shakliga ko‘ra qanday hujjatlar to‘ldiriladi?", a: ["Qolipli", "Xususiy", "Namunaviy", "Tashqi"], c: 0 },
+        { q: "143. Qanday hujjatlar yuridik kuchga ega emas?", a: ["Qoralama hujjatlar", "Farmonlar", "Ko‘chirmalar", "Berilgan javoblarning barchasi to‘g‘ri."] }
     ];
 
     function getResults() {
-        return JSON.parse(localStorage.getItem('eco_quiz_vFinal') || '[]');
+        return JSON.parse(localStorage.getItem('rus_test_v2026') || '[]');
     }
 
     function saveResults(db) {
-        localStorage.setItem('eco_quiz_vFinal', JSON.stringify(db));
+        localStorage.setItem('rus_test_v2026', JSON.stringify(db));
     }
 
     function handleLogin() {
         const name = document.getElementById('user-name').value.trim();
-        const code = document.getElementById('access-code').value;
-        if(!name) return alert("Ism kiriting!");
-        if(code !== SECRET_CODE) return alert("Kod xato!");
+        if(!name) return alert("Iltimos, ismingizni kiriting!");
         currentUser = name;
         let db = getResults();
         if(!db.find(u => u.name === currentUser)) {
@@ -288,6 +239,9 @@
     function loadQuestion() {
         if(currentIdx >= questions.length) return finishQuiz();
 
+        // Yangi savol yuklanganda "Keyingisi" tugmasini yashiramiz
+        document.getElementById('next-btn').style.display = 'none';
+
         const q = questions[currentIdx];
         document.getElementById('q-info').innerText = `Savol ${currentIdx+1} / ${questions.length}`;
         document.getElementById('q-text').innerText = q.q;
@@ -312,19 +266,22 @@
                     score++;
                 } else {
                     div.classList.add('wrong');
-                    // To'g'ri javobni ham belgilash
                     document.querySelectorAll('.opt').forEach(opt => {
                         if(opt.innerText === correctAnswer) opt.classList.add('correct');
                     });
                 }
 
-                setTimeout(() => {
-                    currentIdx++;
-                    loadQuestion();
-                }, 1200);
+                // Javob berilgandan keyin tugmani ko'rsatamiz (avtomatik o'tish olib tashlandi)
+                document.getElementById('next-btn').style.display = 'block';
             };
             box.appendChild(div);
         });
+    }
+
+    // Keyingi savolga o'tish funksiyasi
+    function nextQuestion() {
+        currentIdx++;
+        loadQuestion();
     }
 
     function finishQuiz() {
