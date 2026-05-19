@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> - 60 ta Savol va Reyting</title>
+    <style>
+        :root { --primary: #00f2fe; --secondary: #4facfe; --correct: #00ff88; --wrong: #ff4b2b; --bg: #0b0e14; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--bg); color: #fff; }
+        .container { width: 100%; max-width: 850px; padding: 20px; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); display: none; }
+        .active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+       
+        input { width: 100%; padding: 15px; margin: 10px 0 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; }
+        .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
+        .btn-primary { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #000; }
+        .btn-danger { background: rgba(255, 75, 43, 0.2); border: 1px solid var(--wrong); color: var(--wrong); margin-top: 20px; }
+        .counter-badge { background: var(--primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .table-container { max-height: 300px; overflow-y: auto; margin: 20px 0; border-radius: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: var(--primary); position: sticky; top: 0; background: #1a1d24; }
+       
+        tr:nth-child(1) td:first-child { color: #ffd700; font-weight: bold; font-size: 1.2rem; }
+        tr:nth-child(2) td:first-child { color: #c0c0c0; font-weight: bold; }
+        tr:nth-child(3) td:first-child { color: #cd7f32; font-weight: bold; }
+        .my-row { background: rgba(0, 242, 254, 0.15) !important; border-left: 4px solid var(--primary); }
+        .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.4s; }
+        .options { display: grid; gap: 12px; }
+        .opt { background: rgba(255, 255, 255, 0.07); padding: 16px; border-radius: 15px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .opt:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--primary); }
+        .correct { background: var(--correct) !important; color: #000; font-weight: bold; }
+        .wrong { background: var(--wrong) !important; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="login-card" class="card active">
+        <h1 style="text-align:center"></h1>
+        <p style="text-align:center; color:#aaa">Tizimga kirish</p>
+        <input type="text" id="user-name" placeholder="Ismingizni kiriting...">
+        <input type="password" id="access-code" placeholder="Kirish kodi ()">
+        <button class="btn btn-primary" onclick="handleLogin()">Kirish</button>
+    </div>
+
+    <div id="lobby-card" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="welcome-user">Salom!</h2>
+            <div class="counter-badge">Ishtirokchilar: <span id="total-players">0</span></div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>№</th><th>Ishtirokchi</th><th>Ball</th></tr></thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-primary" onclick="startQuiz()">TESTNI BOSHLASH</button>
+    </div>
+
+    <div id="quiz-card" class="card">
+        <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+        <div id="q-info" style="color:var(--secondary); font-weight:bold; margin-bottom:10px;"></div>
+        <h2 id="q-text" style="min-height: 60px; font-size: 1.1rem;"></h2>
+        <div class="options" id="opt-box"></div>
+        <button class="btn btn-danger" onclick="finishQuiz()">Testni yakunlash</button>
+    </div>
+
+    <div id="result-card" class="card" style="text-align:center;">
+        <h1>Yakuniy Natija</h1>
+        <div style="font-size: 4rem; color: var(--primary); font-weight: 800;" id="final-score">0</div>
+        <p id="final-desc"></p>
+        <button class="btn btn-primary" onclick="showLobby()">Reytingga qaytish</button>
+    </div>
+</div>
+
+<script>
+    const SECRET_CODE = "2026";
+    let currentUser = "";
+    let score = 0;
+    let currentIdx = 0;
+
+       const questions = [
+        { q: "“Agar xar kishi qunt bilan mehnat qilsa, u o‘ziga nisbatan talabchan bo‘lsa, u yaxshi pedagog bo‘lishi mumkin” ushbu fikr kimga tegishli?", a: ["K.D.Ushinskiy", "A.S.Makarenko", "Ya.A.Komenskiy", "I.G.Pestalotsi"], c: 0 },
+        { q: "“Al-Jome-as sahih” asarining muallifi?", a: ["Imom Termiziy", "Imom Buxoriy", "Imom Muslim", "Abu Dovud"], c: 1 },
+        { q: "“Al-kutub as-sita” so’zining manosi nima?", a: ["Oltita kitob", "To'rtta kitob", "Ishonchli to'plam", "Yaxshi hadislar"], c: 0 },
+        { q: "“As-sahih” to‘plami qaysi muhaddis – vatandoshimiz ijodiga mansub?", a: ["Abu Dovud", "Imom Buxoriy", "Imom Termiziy", "Imom Muslim"], c: 1 },
+        { q: "“Bunda so‘fiy xudoning dargohiga erishadi, vasliga vosil boMadi, u bilan birlashadi, shu orqali inson foniy, ya’ni «analhaq» bo‘la oladi” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 3 },
+        { q: "“Buyuk didaktika“, “Onalar maktabi“ asarini kim yozgan?", a: ["Ya.A.Komenskiy", "J.J.Russo", "I.G.Pestalotsi", "D.Lokk"], c: 0 },
+        { q: "“Diniy marosimlar va shariat aqidalarini, taqvolarini aynan, izchil bajarish... qalbni tarbiyalaydi” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 0 },
+        { q: "“Efeblar” qanday muassasa bo‘lgan?", a: ["Boshlang'ich maktab", "Harbiy-siyosiy tarbiya maktabi", "Musiqa maktabi", "Gimnastika maktabi"], c: 1 },
+        { q: "“Ey o’g’il, farzandlaringni tarbiyalashdan oldin o’zingni tarbiyala...” – degan ibora qaysi alloma asarida bayon etilgan.", a: ["Yusuf Xos Hojib", "Kaykovus", "Alisher Navoiy", "Abu Ali ibn Sino"], c: 1 },
+        { q: "“Fozil odamlar shahri” va “Ruhiy madaniyat haqida risola” asarlari muallifi kim?", a: ["Abu Nasr Farobiy", "Abu Rayhon Beruniy", "Ibn Sino", "Al-Xorazmiy"], c: 0 },
+        { q: "“hamma narsaning, butun borliqning asosi - xudo ekanini... anglash... u orif bo'ladi.” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 2 },
+        { q: "“Juvonmardlik asli 3 narsadir...”. Ushbu fikrning muallifi kim?", a: ["Xoja Ahmad Yassaviy", "Najmiddin Kubro", "Kaykovus", "Yusuf Xos Hojib"], c: 2 },
+        { q: "“Muallimi soniy” ya’ni ikkinchi muallim taxallusini olgan alloma kim?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Arastu", "Beruniy"], c: 0 },
+        { q: "“Mudarris“ soʻzini ma’nosi nima?", a: ["O'quvchi", "Dars beruvchi, o'qituvchi", "Yordamchi", "Boshliq"], c: 1 },
+        { q: "“Mudarris ota-onasining mansabi, boyligiga qarab bolaga muomala qilmasligi kerak”. Ushbu fikrlar qaysi allomaga mansub?", a: ["Farobiy", "Beruniy", "Ibn Sino", "Navoiy"], c: 2 },
+        { q: "“Muhaddislar imomi” unvonini olgan muhaddis kim?", a: ["Imom Termiziy", "Imom Muslim", "Imom Buxoriy", "Abu Dovud"], c: 2 },
+        { q: "“nafsni tiyish... ya’ni tariqat - fano, o‘zdan kechish...” so’fiylik ta’limotining qaysi bosqichi?", a: ["Shariat", "Tariqat", "Ma'rifat", "Haqiqat"], c: 1 },
+        { q: "“Padarkush“ asari kimni qalamiga mansub?", a: ["Mahmudxo'ja Behbudiy", "Munavvarqori Abdurashidxonov", "Abdulla Avloniy", "Fitrat"], c: 0 },
+        { q: "“Pedagogik mahorat” nima?", a: ["Faqat bilimga ega bo'lish", "Pedagogik san'at va shaxsiy sifatlar yig'indisi", "Darsni vaqtida tugatish", "Ko'p kitob o'qish"], c: 1 },
+        { q: "“Qobusnoma” asari kimning qalamiga masub?", a: ["Nizomulmulk", "Kaykovus", "Yusuf Xos Hojib", "Ahmad Yugnakiy"], c: 1 },
+        { q: "“Qutadg`u bilig” ma`nosi nimani anglatadi?", a: ["Baxtga eltuvchi bilim", "Ezgulik kitobi", "Davlat boshqarish", "Axloq qoidalari"], c: 0 },
+        { q: "“Qutadg‘u bilig” asarining muallifi.", a: ["Ahmad Yugnakiy", "Yusuf Xos Hojib", "Mahmud Qoshg'ariy", "Xoja Ahmad Yassaviy"], c: 1 },
+        { q: "“Ta’lim degan so‘z... nazariy fazilatlarni birlashtirish, tarbiya esa... amaliy ish...” Ushbu ta’rif muallifi?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "Navoiy"], c: 0 },
+        { q: "“Takrorlash bilimning asosidir”, ushbu ibora qaysi pedagogga tegishli?", a: ["Ya.A.Komenskiy", "K.D.Ushinskiy", "I.G.Pestalotsi", "J.J.Russo"], c: 0 },
+        { q: "“Tizim” so’zi haqida tushuncha?", a: ["Tartibsiz narsalar", "O'zaro bog'langan elementlar majmuasi", "Faqat maktab", "Darsliklar"], c: 1 },
+        { q: "“Turkiy Guliston yoxud axloq” asarida komil inson g'oyalari?", a: ["Harbiy bilim", "Axloqiy tarbiya (Yaxshi xulqlar)", "Faqat tijorat", "Tibbiyot bilimlar"], c: 1 },
+        { q: "“Turkiy Guliston yoxud axloq” asarining muallifi.", a: ["Fitrat", "Abdulla Avloniy", "Hamza", "Behbudiy"], c: 1 },
+        { q: "“Ustoz shogirdlariga qattiq zulm ham, haddan tashqari ko’ngilchanlik ham qilmasligi lozim”. Ushbu fikr muallifi?", a: ["Sa'diy Sheroziy", "Ibn Sino", "Alisher Navoiy", "Farobiy"], c: 1 },
+        { q: "“Birinchi muallim”, “Ikkinchi muallim”, “Turkiy guliston” darsliklarini kim yaratgan?", a: ["Abdulla Avloniy", "Mahmudxo'ja Behbudiy", "Munavvarqori", "Hamza"], c: 0 },
+        { q: "“Zafarnoma” asarining muallifi kim?", a: ["Sharafuddin Ali Yazdiy", "Nizomiddin Shomiy", "Amir Temur", "Mirzo Ulug'bek"], c: 0 },
+        { q: "“Ziji ko’ragoniy” asari nusxasini ilk bora Istambulda kim chop ettiradi?", a: ["Ali Qushchi", "Boyazid II", "Murod II", "Sulton Mahmud"], c: 0 },
+        { q: "”Kimga qanday pandu-nasihat, unga avvolo o`zing amal qil” muallifi?", a: ["Yusuf Xos Hojib", "Kaykovus", "Ahmad Yugnakiy", "Navoiy"], c: 0 },
+        { q: "”Mehnat axloqiylikni asosi, saxovatlilik belgisi”-deb qaysi ta`limotda ko`rsatilgan?", a: ["Zardushtiylik", "Islom", "Tasavvuf", "Buddhizm"], c: 2 },
+        { q: "«Bilim olish har bir musulmon ayol va erkakning burchidir» deb yozilgan madrasa?", a: ["Ulug'bek madrasasi", "Sherdor madrasasi", "Tillakori madrasasi", "Kukeldosh"], c: 0 },
+        { q: "«Odob as-solihin» asari muallifi?", a: ["Abdulla Avloniy", "Mahmudxo'ja Behbudiy", "Munavvarqori", "Fitrat"], c: 2 },
+        { q: "«Temur tuzuklari»dagi o‘gitlar turlari?", a: ["Axloq va davlat boshqaruvi", "Faqat harbiy", "Faqat diniy", "Savdo ishlari"], c: 0 },
+        { q: "1913-yilda “Turon” teatr truppasiga asos solgan adib?", a: ["Behbudiy", "Abdulla Avloniy", "Fitrat", "Cho'lpon"], c: 1 },
+        { q: "Abu Ali ibn Sino asarlari to‘g‘ri ko‘rsatilgan qator?", a: ["Al-Qonun, Tib qonunlari", "Kitob ash-shifo, Al-Qonun, Tib qonunlari", "Fozil odamlar shahri", "Zafarnoma"], c: 1 },
+        { q: "Abu Ali ibn Sinoning asarlari?", a: ["Faqat tibbiyotga oid", "Falsafa, tibbiyot, musiqa, pedagogikaga oid", "Faqat matematika", "Faqat astronomiya"], c: 1 },
+        { q: "Ibn Sinoning pedagogik qarashlari bayon etilgan asarlar?", a: ["Tadbiri manzil", "Tib qonunlari", "Kitob ash-shifo", "Barchasi"], c: 3 },
+        { q: "Abu Rayhon Beruniy inson kamolotida uch narsani muhim deydi. Bular?", a: ["Irsiyat, muhit, tarbiya", "Bilim, boylik, kuch", "Nasl, vatan, oziq-ovqat", "Kitob, ustoz, do'st"], c: 0 },
+        { q: "Abu Rayhon Beruniyning pedagogik qarashlari bayon etilgan asarlari?", a: ["Qadimgi xalqlardan qolgan yodgorliklar, Hindiston", "Zafarnoma", "Qobusnoma", "Hayot kitobi"], c: 0 },
+        { q: "Afinada musiqa, ashula o‘rgatilgan maktablar?", a: ["Kifara maktabi", "Grammatika maktabi", "Palestra", "Gimnaziy"], c: 0 },
+        { q: "Ahmad Yugnakiyning asari?", a: ["Hibatul haqoyiq", "Qutadg'u bilig", "Devonu lug'atit turk", "Qirq hadis"], c: 0 },
+        { q: "Akademik qobiliyat nima?", a: ["Tez yugurish", "Bilimlarni tez va oson egallash qobiliyati", "Rasm chizish", "Siyosiy rahbarlik"], c: 1 },
+        { q: "Alisher Navoiy ta’rifi bo‘yicha 'shodliklar kaliti' nima?", a: ["Boylik", "Bilim va odob", "Mehnat", "Saboq"], c: 2 },
+        { q: "Arablar “daryo orti” deb atagan hudud?", a: ["Movarounnahr", "Xuroson", "Eron", "Hindiston"], c: 0 },
+        { q: "Beruniy ta’limotiga ko’ra inson kamolotida muhim omillar?", a: ["Tabiat va jamiyat", "Faqat boylik", "Faqat irsiyat", "Faqat o'yin"], c: 0 },
+        { q: "Birinchilardan bo‘lib sinov-kuzatish metodlariga asos solgan mutafakkir?", a: ["Beruniy", "Ibn Sino", "Farobiy", "Xorazmiy"], c: 0 },
+        { q: "Dastlabki arab tilidagi maktablarga nima ta'sir etadi?", a: ["Islom dini va Qur'on", "Savdo", "Urushlar", "Sayohatlar"], c: 0 },
+        { q: "Diapozon tushunchasi?", a: ["Ovozning eng past va eng yuqori pardalari oralig'i", "Nutq tezligi", "Ovoz tembri", "Musiqa asbobi"], c: 0 },
+        { q: "Diksiya nima?", a: ["Nutq tezligi", "So'zlarning aniq va ravshan talaffuz etilishi", "Ovoz balandligi", "Yuz harakati"], c: 1 },
+        { q: "Qadimda bolalar tarbiyasi tizimini o‘rganishda asos bo‘lgan manba?", a: ["Avesto", "Qur'on", "Injil", "Veda"], c: 0 },
+        { q: "Eng qadimgi madaniy boyliklarni o`rganish necha guruhga bo`lingan?", a: ["3 guruh (Arxeologik, Etnografik, Yozma)", "2 guruh", "4 guruh", "5 guruh"], c: 0 },
+        { q: "Eng qadimgi madaniy yodgorliklarni o'rganishda 3 asosiy manba?", a: ["Ashyoviy, og'zaki, yozma", "Faqat kitoblar", "Faqat rasmlar", "Faqat binolar"], c: 0 },
+        { q: "Eng qadimgi yozma ma’rifiy manbalar?", a: ["Avesto, Orxun-Enasoy yodgorliklari", "Qobusnoma", "Qutadg'u bilig", "Zafarnoma"], c: 0 },
+        { q: "Eramizdan avvalgi birinchi ming yillikda ajdodlarimiz qayerda yashagan?", a: ["Turon, Movarounnahr", "Misr", "Rim", "Xitoy"], c: 0 },
+        { q: "Farobiy qaysi risolasida bilimlarni oʻrganish tartibini sanaydi?", a: ["Ilmlarning kelib chiqishi va tasnifi", "Fozil odamlar shahri", "Musiqa kitobi", "Baxtga erishuv"], c: 0 },
+        { q: "Farobiy ta’lim-tarbiya ishlarini qanday yo‘llar bilan amalga oshirishni deydi?", a: ["Raqobat va jazo", "O'rgatish va ko'nikma hosil qilish", "Faqat kitob o'qish", "Faqat suhbat"], c: 1 },
+        { q: "Farobiyning qaysi asarida davlat rahbarini o’n ikki fazilati ko’rsatiladi?", a: ["Fozil odamlar shahri", "Baxtga erishuv", "Siyosat al-madaniya", "Musiqa"], c: 0 },
+        { q: "Hadis ilmda ”Sahih” yo`nalishini asoschisi kim?", a: ["Imom Buxoriy", "Imom Termiziy", "Imom Muslim", "Abu Dovud"], c: 0 },
+        { q: "Hadis ilmining yaratilishidagi eng oltin davr?", a: ["IX asr", "VII asr", "XI asr", "XV asr"], c: 0 },
+        { q: "Ibn Sino Sharqda qanday unvonga sazovor boʻlgan?", a: ["Shayxur-rais", "Muallimi soniy", "Sultoni hakim", "Hujjatul islom"], c: 0 },
+        { q: "Ibrat taxallusi qaysi jadidga tegishli?", a: ["Ishoqxon Junaydullo o'g'li", "Avloniy", "Fitrat", "Behbudiy"], c: 0 },
+        { q: "Ibtidoiy jamoada tarbiyaga nima sabab bo‘lgan?", a: ["Hayotiy ehtiyoj va mehnat", "Darslar", "Kitoblar", "Siyosat"], c: 0 },
+        { q: "Ibtidoiy jamoa tuzumi necha davrga bo’linadi?", a: ["Matriarxat va Patriarxat", "2 davr", "3 davr", "4 davr"], c: 0 },
+        { q: "Ilg'or pedagogik tajriba nima?", a: ["Yuqori natija beruvchi o'qitish usuli", "Oddiy dars", "Eski metod", "Kitob yozish"], c: 0 },
+        { q: "Imom Buxoriy qachon va qayerda tavvallud topgan?", a: ["810-yil Buxoro", "800-yil Samarqand", "820-yil Termiz", "850-yil Xiva"], c: 0 },
+        { q: "Islom dinida Qur’ondan keyingi mo’tabar manba?", a: ["Hadis", "Fiqh", "Tafsir", "Shariat"], c: 0 },
+        { q: "Izchil kasbiy o‘sish pedagogga xos qanday kompetentlik?", a: ["Autokompetentlik", "Maxsus", "Ijtimoiy", "Metodik"], c: 0 },
+        { q: "Jadidchilik g’oyasini birinchilardan bo’lib kim ilgari surdi?", a: ["Ismoil Gasprinskiy", "Behbudiy", "Avloniy", "Fitrat"], c: 0 },
+        { q: "Kaykovusning “Qobusnoma” asari nechta bobdan iborat?", a: ["44 ta bob", "40 ta bob", "50 ta bob", "30 ta bob"], c: 0 },
+        { q: "Kaykovus “Qobusnoma”da yoshlar saqlanishi lozim bo'lgan sifatlar?", a: ["Yolg'on, kibr, baxillik", "Bilim", "Mehnat", "Jasorat"], c: 0 },
+        { q: "“Qadimgi xalqlardan qolgan yodgorliklar” asarida zardushtiylik haqida kim yozadi?", a: ["Abu Rayhon Beruniy", "Farobiy", "Ibn Sino", "Xorazmiy"], c: 0 },
+        { q: "Kimni “Adiblari adibi”, “Fozillar sardori” deb atashgan?", a: ["Ahmad Yugnakiy", "Navoiy", "Yusuf Xos Hojib", "Zamaxshariy"], c: 0 },
+        { q: "Kommunikativ qobiliyat bu – ?", a: ["Muloqotga kirisha olish", "Bilim berish", "Tashkil qilish", "Yozish"], c: 0 },
+        { q: "Konstruktiv qobiliyat?", a: ["Darsni loyihalash va rejalashtirish", "Gapirish", "Musiqa chalish", "Sport"], c: 0 },
+        { q: "Sinf-dars tizimi qachon va kim tomonidan yaratilgan?", a: ["XVII asr, Ya.A.Komenskiy", "XIX asr, Ushinskiy", "XVIII asr, Russo", "XX asr, Makarenko"], c: 0 },
+        { q: "Markaziy Osiyoda birinchi bo`lib ta`lim-tarbiyaga ta`rif bergan olim?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "Xorazmiy"], c: 0 },
+        { q: "Musulmon maktablari tizimi qachon tashkil topgan?", a: ["VIII-IX asrlar", "VI asr", "XV asr", "XVIII asr"], c: 0 },
+        { q: "Sharqda kimni ”Muallimi soniy” deb ataganlar?", a: ["Abu Nasr Farobiy", "Ibn Sino", "Beruniy", "G'azzoliy"], c: 0 },
+        { q: "Mimika nima?", a: ["Yuz mushaklari harakati", "Qo'l harakati", "Ovoz", "Yurish"], c: 0 },
+        { q: "Mirzo Ulug‘bek qayerlarda madrasalar barpo etgan?", a: ["Buxoro, Samarqand, G'ijduvon", "Xiva", "Toshkent", "Qarshi"], c: 0 },
+        { q: "Mirzo Ulug’bek madrasalarida o‘qish bosqichlari?", a: ["Adno, Avsat, A’lo", "Boshlang'ich, O'rta, Oliy", "1, 2, 3", "Sinfdoshlar"], c: 0 },
+        { q: "Nutq madaniyati nima?", a: ["Nutqning aniqligi, boyligi va tozaligi", "Faqat tez gapirish", "Baland ovoz", "Chet tillarni bilish"], c: 0 },
+        { q: "Nutq ritmi?", a: ["Nutq elementlarining vaqt bo'yicha mutanosibligi", "Ovoz tembri", "Muloqot", "Diksiya"], c: 0 },
+        { q: "O‘qituvchi – bu:", a: ["Maxsus tayyorgarlikka ega bo'lgan ta'lim-tarbiya beruvchi shaxs", "Faqat kitobxon", "Boshliq", "Yozuvchi"], c: 0 },
+        { q: "Bolalarni jamoa bo‘lib o‘qitishni ilmiy asoslab bergan Sharq allomasi?", a: ["Ibn Sino", "Farobiy", "Beruniy", "Navoiy"], c: 0 },
+        { q: "O’qituvchi uchun eng muhim xususiyat?", a: ["Bolalarni sevish va o'z fanini bilish", "Baland ovoz", "Yaxshi kiyinish", "Qattiqqo'llik"], c: 0 },
+        { q: "Odob – bu:", a: ["Insonning xulq-atvori va jamiyatdagi qoidalarga rioya qilishi", "Kitob", "Darslik", "O'yin"], c: 0 },
+        { q: "O'qituvchi axloqiy me'yorlarga rioya qilishi nima deyiladi?", a: ["Pedagogik takt", "Pedagogik texnika", "Pedagogik mahorat", "Pedagogik uslub"], c: 0 },
+        { q: "O'z-o'ziga ta'sir qilish usullari?", a: ["O'z-o'zini ishontirish, buyruq, nazorat", "Jazo", "Raqobat", "Inkor"], c: 0 },
+        { q: "Pedagog mehnatini ilmiy tashkil etish tamoyillari?", a: ["Rejalilik, tejamkorlik, samaradorlik", "Faqat o'qish", "Dam olish", "Sayohat"], c: 0 },
+        { q: "Pedagogik faoliyatning obyekti kim?", a: ["O'quvchi", "Kitob", "Doska", "Ota-ona"], c: 0 },
+        { q: "Pedagogik takt nima?", a: ["O'qituvchining me'yor va odob tuyg'usi", "Dars o'tish", "Yozish", "Sport usuli"], c: 0 },
+        { q: "Pedagogik texnologiyaning maqsadi?", a: ["Ta'lim samaradorligini kafolatlash", "Faqat kompyuterdan foydalanish", "Kitob tarqatish", "Vaqtni cho'zish"], c: 0 },
+        { q: "“Evristik” suhbat metodini kim olib kelgan?", a: ["Sokrat", "Platon", "Aristotel", "Komenskiy"], c: 0 },
+        { q: "Pedagogika tarixi fani nimani o'rgandi?", a: ["Insoniyat jamiyati rivojidagi ta'lim-tarbiya tarixini", "Faqat hozirgi maktabni", "Faqat qonunlarni", "Faqat bolalarni"], c: 0 },
+        { q: "Pedagogika tarixini o’rganish manbalari?", a: ["Yozma yodgorliklar, allomalar asarlari, xalq og'zaki ijodi", "Faqat gazeta", "Faqat internet", "Faqat kino"], c: 0 },
+        { q: "Perseptiv qobiliyat?", a: ["O'quvchining ichki dunyosini tushuna olish", "Yaxshi ko'rish", "Tez yozish", "Baland ovoz"], c: 0 },
+        { q: "Afina davlatida tarbiya bilan shug‘ullanuvchilar?", a: ["Pedagoglar", "O'qituvchilar", "Harbiylar", "Siyosatchilar"], c: 0 },
+        { q: "Sparta davlatida tarbiya bilan shug‘ullanuvchilar?", a: ["Pedonomlar", "Pedagoglar", "Filosoflar", "Ritorlar"], c: 0 },
+        { q: "“Didaktikaning oltin qoidasi” muallifi?", a: ["Ya.A.Komenskiy", "Ushinskiy", "Russo", "Pestalotsi"], c: 0 },
+        { q: "Refleksiya bosqichi nima uchun zarur?", a: ["O'z faoliyatini tahlil qilish uchun", "Dam olish uchun", "Darsni tugatish uchun", "Kitob o'qish uchun"], c: 0 },
+        { q: "“Ona tili” darsligini yaratgan rus pedagogi?", a: ["K.D.Ushinskiy", "Tolstoy", "Makarenko", "Pirogov"], c: 0 },
+        { q: "Ulug‘bek madrasasi peshtoqiga nima bitilgan?", a: ["Bilim olish har bir musulmon uchun farzdir", "Vaqt - qilichdir", "Adolat - najotdir", "Mehnat - baxtdir"], c: 0 },
+        { q: "So‘fiylik ta’limotining bosqichlari?", a: ["Shariat, Tariqat, Ma'rifat, Haqiqat", "O'qish, O'rganish", "Ibodat va mehnat", "Bilim va axloq"], c: 0 },
+        { q: "Zardushtiylik ta’limotining bosh g‘oyasi?", a: ["Ezg'u fikr, ezg'u so'z, ezg'u amal", "Faqat ibodat", "Urush va g'alaba", "Boylik to'plash"], c: 0 },
+        { q: "Turkiy tilda yaratilgan 1-didaktik asar?", a: ["Qutadg'u bilig", "Hibatul haqoyiq", "Qirq hadis", "Turkiy Guliston"], c: 0 },
+        { q: "“Ziji ko’ragoniy” muallifi kim?", a: ["Mirzo Ulug'bek", "Ali Qushchi", "Beruniy", "Xorazmiy"], c: 0 },
+        { q: "“Padarkush” dramasini kim yozgan?", a: ["Behbudiy", "Avloniy", "Fitrat", "Cho'lpon"], c: 0 },
+        { q: "“Shayxur-rais” kim?", a: ["Ibn Sino", "Farobiy", "Beruniy", "G'azzoliy"], c: 0 },
+        // Qolgan savollar 113-153
+        { q: "Al-Xorazmiy qaysi fanga asos solgan?", a: ["Algebra", "Biologiya", "Kimyo", "Geologiya"], c: 0 },
+        { q: "“Astronomiya kaliti” asari muallifi?", a: ["Beruniy", "Ulug'bek", "Ali Qushchi", "Xorazmiy"], c: 2 },
+        { q: "Tarbiyaning maqsadi nima?", a: ["Komil insonni shakllantirish", "Faqat bilim berish", "Ishga joylash", "Sayohat qilish"], c: 0 },
+        { q: "Didaktika nima?", a: ["Ta'lim nazariyasi", "Tarbiya usuli", "Musiqa fani", "Rasm chizish"], c: 0 },
+        { q: "Pedagogik jarayonning asosiy qatnashchilari?", a: ["O'qituvchi va o'quvchi", "Kitob va daftar", "Maktab va bino", "Sinf va parta"], c: 0 },
+        { q: "“Inson kamolotida tarbiya hal qiluvchi rol o'ynaydi” - bu qaysi yo'nalish?", a: ["Pedotsentrizm", "Sotsiologizm", "Biologizm", "Idealizm"], c: 1 },
+        { q: "Aqliy tarbiya nima?", a: ["Bilimlarni egallash jarayoni", "Sport bilan shug'ullanish", "Tozalikka rioya qilish", "Rasm chizish"], c: 0 },
+        { q: "Mehnat tarbiyasining asosi?", a: ["Amaliy faoliyat", "Kitob o'qish", "Dars tinglash", "Uxshashlik"], c: 0 },
+        { q: "Estetik tarbiya?", a: ["Go'zallikni his qilish", "Kuchli bo'lish", "Tez yozish", "Yaxshi yeyish"], c: 0 },
+        { q: "Ekoligik tarbiya?", a: ["Tabiatni asrash", "Kosmosni o'rganish", "Mashina haydash", "Daraxt kesish"], c: 0 },
+        { q: "Huquqiy tarbiya?", a: ["Qonunlarni bilish", "She'r aytish", "Rasm chizish", "Tuzatish"], c: 0 },
+        { q: "Oila tarbiyasining o'rni?", a: ["Ilk tarbiya o'chog'i", "Ikkinchi darajali", "Faqat moddiy ta'minot", "Bilim maskani"], c: 0 },
+        { q: "Shaxs rivojlanishiga ta'sir etuvchi omillar?", a: ["Irsiyat, Muhit, Tarbiya", "Faqat pul", "Faqat maktab", "Faqat vatan"], c: 0 },
+        { q: "Gumanistik pedagogika asosi?", a: ["Insonparvarlik", "Qattiqqo'llik", "Jazolash", "Farq qilmaslik"], c: 0 },
+        { q: "Pedagogik mahorat qismlari?", a: ["Bilim, texnika, takt", "Faqat ovoz", "Faqat kiyim", "Faqat qalam"], c: 0 },
+        { q: "“Ma'naviyat - eng qudratli qurol” fikri kimniki?", a: ["I.Karimov", "Sh.Mirziyoyev", "Fitrat", "Behbudiy"], c: 0 },
+        { q: "Interfaol uslub nima?", a: ["O'zaro hamkorlik", "Faqat ma'ruza", "Mustaqil mutolaa", "Imtihon"], c: 0 },
+        { q: "Modul ta'limi?", a: ["O'quv materialini qismlarga bo'lish", "Faqat bitta kitob", "Yil bo'yi dars", "Darsdan qochish"], c: 0 },
+        { q: "Monitoring nima?", a: ["Doimiy nazorat va tahlil", "Bir marta tekshirish", "Darsni yakunlash", "Tanaffus"], c: 0 },
+        { q: "Pedagogik innovatsiya?", a: ["Yangi g'oya va usullar", "Eski kitoblar", "Oddiy dars", "Doska o'chirish"], c: 0 },
+        { q: "Loyihalash usuli?", a: ["Muayyan muammoni hal etish", "Yodlash", "Ko'chirish", "Uxlab qolish"], c: 0 },
+        { q: "Case-study nima?", a: ["Vaziyatni tahlil qilish", "Rasm chizish", "Sport o'yini", "Kitob sotish"], c: 0 },
+        { q: "Blits-so'rov?", a: ["Tezkor savol-javob", "Uzoq suhbat", "Yozma ish", "Insho"], c: 0 },
+        { q: "Aqliy hujum (Brainstorming)?", a: ["G'oyalar to'plash", "Urishish", "Kitob yozish", "Mashq bajarish"], c: 0 },
+        { q: "Klaster usuli?", a: ["Tarmoqlash (fikrlar bog'liqligi)", "Chiziq chizish", "Raqam qo'yish", "Xulosa"], c: 0 },
+        { q: "Venn diagrammasi?", a: ["Taqqoslash", "Hisoblash", "Rasm chizish", "Bo'yash"], c: 0 },
+        { q: "FSMU usuli?", a: ["Fikr, sabab, misol, umumlashtirish", "Fizika, sport, matematika, uqtirish", "Falsafa, san'at", "Xato"], c: 0 },
+        { q: "Ta'lim turlari nechta?", a: ["9 ta (O'zR qonuniga ko'ra)", "5 ta", "3 ta", "10 ta"], c: 0 },
+        { q: "Kadrlar tayyorlash milliy dasturi maqsadi?", a: ["Raqobatbardosh mutaxassis tayyorlash", "Faqat maktab ochish", "Chet elga yuborish", "Pul ishlash"], c: 0 },
+        { q: "Maktabgacha ta'lim yoshi?", a: ["3-7 yosh", "1-5 yosh", "5-10 yosh", "0-3 yosh"], c: 0 },
+        { q: "Oliy ta'lim bosqichlari?", a: ["Bakalavriat va Magistratura", "Maktab va Kollej", "Litsey", "Kurslar"], c: 0 },
+        { q: "Pedagogik etikada asosiy tushuncha?", a: ["Burch va mas'uliyat", "Maosh", "Mansab", "Dam olish"], c: 0 },
+        { q: "Uzluksiz ta'lim tamoyili?", a: ["Hayot davomida o'qish", "Faqat yoshlikda", "Faqat ishda", "Qisqa muddat"], c: 0 },
+        { q: "O'qitishning ko'rgazmalilik tamoyili?", a: ["Rasmlar va vositalardan foydalanish", "Faqat gapirish", "Kitob yozish", "Eshikni yopish"], c: 0 },
+        { q: "Muammoli ta'lim nima?", a: ["Savollar orqali yechim izlash", "Muammo yaratish", "Darsni qiyinlashtirish", "Xatolik"], c: 0 },
+        { q: "Individual yondashuv?", a: ["Har bir o'quvchi bilan alohida ishlash", "Hamma bilan bir xil", "Jazo berish", "E'tiborsizlik"], c: 0 },
+        { q: "Sokrat suhbati?", a: ["Savol-javob orqali haqiqatni topish", "Ma'ruza", "Yozma bahs", "Sukunat"], c: 0 },
+        { q: "Pedagogik diagnostika?", a: ["O'quvchi holatini aniqlash", "Kasallikni davolash", "Kompyuter tuzatish", "Dars o'tish"], c: 0 },
+        { q: "O'qituvchining nutqi qanday bo'lishi kerak?", a: ["Aniq, ravshan, madaniyatli", "Tez va baland", "Sokin va past", "Shevada"], c: 0 },
+        { q: "O'quv dasturi nima?", a: ["Mavzular ketma-ketligi", "Dars jadvali", "Kundalik", "Xona tartibi"], c: 0 },
+        { q: "Pedagogika fanining predmeti?", a: ["Tarbiya jarayoni", "Faqat bolalar", "Faqat maktab", "Darsliklar"], c: 0 }
+    ];
+
+    function getResults() {
+        return JSON.parse(localStorage.getItem('eco_quiz_vFinal') || '[]');
+    }
+
+    function saveResults(db) {
+        localStorage.setItem('eco_quiz_vFinal', JSON.stringify(db));
+    }
+
+    function handleLogin() {
+        const name = document.getElementById('user-name').value.trim();
+        const code = document.getElementById('access-code').value;
+        if(!name) return alert("Ism kiriting!");
+        if(code !== SECRET_CODE) return alert("Kod xato!");
+        currentUser = name;
+        let db = getResults();
+        if(!db.find(u => u.name === currentUser)) {
+            db.push({name: currentUser, score: 0});
+            saveResults(db);
+        }
+        showLobby();
+    }
+
+    function showLobby() {
+        switchCard('lobby-card');
+        document.getElementById('welcome-user').innerText = `Salom, ${currentUser}!`;
+        const db = getResults();
+        document.getElementById('total-players').innerText = db.length;
+        db.sort((a,b) => b.score - a.score);
+        const body = document.getElementById('leaderboard-body');
+        body.innerHTML = '';
+        db.forEach((user, i) => {
+            const tr = document.createElement('tr');
+            if(user.name === currentUser) tr.className = 'my-row';
+            tr.innerHTML = `<td>${i+1}</td><td>${user.name}</td><td>${user.score}</td>`;
+            body.appendChild(tr);
+        });
+    }
+
+    function startQuiz() {
+        score = 0;
+        currentIdx = 0;
+        shuffleArray(questions);
+        switchCard('quiz-card');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentIdx >= questions.length) return finishQuiz();
+
+        const q = questions[currentIdx];
+        document.getElementById('q-info').innerText = `Savol ${currentIdx+1} / ${questions.length}`;
+        document.getElementById('q-text').innerText = q.q;
+        document.getElementById('fill').style.width = `${Math.round((currentIdx/questions.length)*100)}%`;
+
+        const correctAnswer = q.a[q.c];
+        const opts = [...q.a];
+        shuffleArray(opts);
+
+        const box = document.getElementById('opt-box');
+        box.innerHTML = '';
+
+        opts.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'opt';
+            div.innerText = text;
+            div.onclick = () => {
+                document.querySelectorAll('.opt').forEach(o => o.style.pointerEvents = 'none');
+
+                if(text === correctAnswer) {
+                    div.classList.add('correct');
+                    score++;
+                } else {
+                    div.classList.add('wrong');
+                    // To'g'ri javobni ham belgilash
+                    document.querySelectorAll('.opt').forEach(opt => {
+                        if(opt.innerText === correctAnswer) opt.classList.add('correct');
+                    });
+                }
+
+                setTimeout(() => {
+                    currentIdx++;
+                    loadQuestion();
+                }, 1200);
+            };
+            box.appendChild(div);
+        });
+    }
+
+    function finishQuiz() {
+        let db = getResults();
+        const userIdx = db.findIndex(u => u.name === currentUser);
+        if(userIdx > -1 && score > db[userIdx].score) {
+            db[userIdx].score = score;
+        } else if(userIdx === -1) {
+            db.push({name: currentUser, score: score});
+        }
+        saveResults(db);
+
+        switchCard('result-card');
+        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+    }
+
+    function switchCard(id) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    }
+</script>
+</body>
+</html>
