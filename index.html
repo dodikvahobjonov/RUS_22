@@ -1549,6 +1549,25 @@ function renderDashboard() {
         </div>
       </div>
 
+      <!-- MENING TESTLARIM -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📝 Mening testlarim (${recentTests.length})</h3>
+          ${recentTests.length?`<button class="btn btn-sm btn-secondary" onclick="navigate('test-library')">Barchasi →</button>`:''}
+        </div>
+        ${recentTests.length?recentTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <strong style="font-size:.9rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${security.sanitizeHTML(t.title)}</strong>
+            <span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • <span class="badge ${t.status==='waiting'?'badge-success':t.status==='active'?'badge-primary':'badge-secondary'}" style="font-size:.7rem">${t.status==='waiting'?'Kutish':t.status==='active'?'Aktiv':'Tugagan'}</span></span>
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="navigate('test-room',{testId:'${t.id}'})">Ochish</button>
+        </div>`).join(''):`<div style="text-align:center;padding:20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:8px">📝</div>
+          <p>Hali test tuzmagansiz</p>
+          <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="navigate('create-test')">Birinchi testni tuzing!</button>
+        </div>`}
+      </div>
+
       <div class="card">
         <div class="card-header"><h3 class="card-title">📊 Statistika</h3></div>
         <div style="margin-bottom:16px">
@@ -1565,7 +1584,7 @@ function renderDashboard() {
       ${publicTests.length?`<div class="card">
         <div class="card-header"><h3 class="card-title">🌍 Ommaviy testlar</h3></div>
         ${publicTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div><strong>${security.sanitizeHTML(t.title)}</strong><br><span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.createdByName}</span></div>
+          <div><strong>${security.sanitizeHTML(t.title)}</strong><br><span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${security.sanitizeHTML(t.createdByName||'')}</span></div>
           <button class="btn btn-sm btn-primary" onclick="joinTestByCode('${t.roomCode}')">Qo'shilish</button>
         </div>`).join('')}
       </div>`:''}
@@ -1592,7 +1611,7 @@ function renderCreateTest() {
         </div>
         <div class="form-group">
           <label class="form-label">Tavsif</label>
-          <textarea class="form-input" id="testDesc" placeholder="Test haqida qisqacha..." maxlength="300"></textarea>
+          <input class="form-input" id="testDesc" placeholder="Test haqida qisqacha..." maxlength="300">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div class="form-group">
@@ -1616,10 +1635,11 @@ function renderCreateTest() {
 
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <h3>Savollar</h3>
+          <h3>📝 Savollar</h3>
           <button class="btn btn-sm btn-primary" onclick="addQuestion()">+ Savol qo'shish</button>
         </div>
         <div id="questionsList"></div>
+        <p style="color:var(--text3);font-size:.85rem;text-align:center;margin-top:12px">💡 "Qo'lda kiritish" da savol qo'shish uchun <strong>"+ Savol qo'shish"</strong> tugmasini bosing. Agar barcha savollarni bir martada kiritmoqchi bo'lsangiz — <strong>"📦 Bir martada kiritish"</strong> tabiga o'ting.</p>
       </div>
 
       <button class="btn btn-primary btn-lg btn-block" onclick="handleCreateTest()">🚀 Testni yaratish</button>
@@ -1819,6 +1839,11 @@ function handleBulkCreate() {
   if (questions.length === 0) return showToast('Savollar topilmadi. Formatni tekshiring — har bir savol alohida bo\'lim bo\'lishi va A) B) C) D) variantlar bo\'lishi kerak', 'error');
 
   const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+  // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
+  if (pageParams.groupId) {
+    groupManager.addTest(pageParams.groupId, test.id);
+    showToast('Test guruhga ham qo\'shildi!', 'success');
+  }
   showToast(`${questions.length} ta savol bilan test yaratildi!`, 'success');
   navigate('test-room', { testId: test.id });
 }
@@ -1851,6 +1876,11 @@ function handleCreateTest() {
   if (!valid || questions.length === 0) return showToast('Barcha savollarni to\'ldiring (kamida 2 variant)', 'error');
 
   const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+  // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
+  if (pageParams.groupId) {
+    groupManager.addTest(pageParams.groupId, test.id);
+    showToast('Test guruhga ham qo\'shildi!', 'success');
+  }
   showToast('Test muvaffaqiyatli yaratildi!', 'success');
   navigate('test-room', { testId: test.id });
 }
@@ -1866,6 +1896,11 @@ function handleAIGenerate() {
   if (questions.length === 0) return showToast('Savollar generatsiya qilinmadi', 'error');
 
   const test = testEngine.createTest({ title, description: `AI generatsiya: ${category}`, questions, timer, maxPlayers: 50, shuffle: true, isPublic: true });
+  // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
+  if (pageParams.groupId) {
+    groupManager.addTest(pageParams.groupId, test.id);
+    showToast('Test guruhga ham qo\'shildi!', 'success');
+  }
   showToast(`${questions.length} ta savol generatsiya qilindi!`, 'success');
   navigate('test-room', { testId: test.id });
 }
@@ -2177,6 +2212,11 @@ function renderGroupDetail() {
 
   const isOwner = group.createdBy === auth.currentUser?.id;
   const groupTests = group.tests.map(tid => testEngine.getTest(tid)).filter(Boolean);
+  const myTests = testEngine.getUserTests(auth.currentUser?.id);
+  const testsNotInGroup = myTests.filter(t => !group.tests.includes(t.id));
+  const registeredUsers = auth.getAllUsers();
+  const existingMemberIds = group.members.map(m => m.id);
+  const availableToAdd = registeredUsers.filter(u => !existingMemberIds.includes(u.id));
 
   return `<div class="animate-fade" style="max-width:900px;margin:0 auto">
     <div class="card" style="margin-bottom:20px">
@@ -2185,8 +2225,9 @@ function renderGroupDetail() {
           <div style="font-size:3rem">${group.icon}</div>
           <div><h2>${security.sanitizeHTML(group.name)}</h2><p style="color:var(--text3)">${security.sanitizeHTML(group.description||'')}</p></div>
         </div>
-        <div style="display:flex;gap:8px">
-          ${isOwner?`<button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${group.inviteCode}')">📋 Taklif kodi: ${group.inviteCode}</button>`:''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${group.inviteCode}');showToast('Taklif kodi nusxalandi: ${group.inviteCode}','success')">📋 Taklif kodi: ${group.inviteCode}</button>
+          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ A'zo qo'shish</button>`:''}
           <button class="btn btn-sm btn-danger" onclick="groupManager.leave('${group.id}');navigate('groups')">Chiqish</button>
         </div>
       </div>
@@ -2194,20 +2235,36 @@ function renderGroupDetail() {
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
       <div class="card">
-        <h3 style="margin-bottom:16px">👥 A'zolar (${group.members.length})</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3>👥 A'zolar (${group.members.length})</h3>
+          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ Qo'shish</button>`:''}
+        </div>
         ${group.members.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
           <div class="player-avatar">${(m.name||'?')[0].toUpperCase()}</div>
           <div style="flex:1"><strong style="font-size:.9rem">${security.sanitizeHTML(m.name)}</strong><br><span class="badge ${m.role==='owner'?'badge-accent':m.role==='admin'?'badge-primary':'badge-info'}">${m.role}</span></div>
+          ${isOwner&&m.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="removeGroupMember('${group.id}','${m.id}')">✕</button>`:''}
         </div>`).join('')}
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:16px">📋 Testlar (${groupTests.length})</h3>
-        ${groupTests.length?groupTests.map(t=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-          <strong style="font-size:.9rem">${security.sanitizeHTML(t.title)}</strong><br>
-          <span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.status}</span>
-        </div>`).join(''):'<p style="color:var(--text3);font-size:.9rem">Hali test yo\'q</p>'}
-        <button class="btn btn-sm btn-primary btn-block" style="margin-top:12px" onclick="navigate('create-test')">+ Test qo'shish</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3>📋 Testlar (${groupTests.length})</h3>
+          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddTestToGroupModal('${group.id}')">+ Qo'shish</button>`:''}
+        </div>
+        ${groupTests.length?groupTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <strong style="font-size:.9rem">${security.sanitizeHTML(t.title)}</strong><br>
+            <span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • <span class="badge ${t.status==='waiting'?'badge-success':t.status==='active'?'badge-primary':'badge-secondary'}" style="font-size:.7rem">${t.status}</span></span>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-sm btn-primary" onclick="navigate('test-room',{testId:'${t.id}'})">Ochish</button>
+            ${isOwner?`<button class="btn btn-sm btn-danger" onclick="removeTestFromGroup('${group.id}','${t.id}')">✕</button>`:''}
+          </div>
+        </div>`).join(''):`<div style="text-align:center;padding:20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:8px">📋</div>
+          <p>Hali test yo'q</p>
+          <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="showAddTestToGroupModal('${group.id}')">Test qo'shing!</button>
+        </div>`}
       </div>
 
       <div class="card">
@@ -2235,6 +2292,137 @@ function sendGroupMsg(groupId) {
   if (!security.rateLimit('chat_' + groupId)) return showToast('Xabar yuborishda sekinroq yozing', 'warning');
   groupManager.addMessage(groupId, text);
   input.value = '';
+  renderApp();
+}
+
+// ==================== GROUP MEMBER & TEST MANAGEMENT ====================
+
+function showAddGroupMemberModal(groupId) {
+  const registeredUsers = auth.getAllUsers();
+  const group = groupManager.getById(groupId);
+  const existingIds = (group?.members || []).map(m => m.id);
+  const available = registeredUsers.filter(u => !existingIds.includes(u.id));
+
+  showModal(`👤 Guruhga a'zo qo'shish`, `
+    <div class="tabs" id="addGroupMemberTabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchAddGroupMemberTab('name')">✏️ Ism bilan</button>
+      <button class="tab" onclick="switchAddGroupMemberTab('list')">👥 Ro'yxatdan</button>
+    </div>
+    <div id="addGroupByName">
+      <p style="color:var(--text3);margin-bottom:12px">Istalgan odamning ismini kiriting:</p>
+      <div class="form-group">
+        <input class="form-input" id="addGroupMemberName" placeholder="Ism kiriting...">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleAddGroupMemberByName('${groupId}')">Qo'shish</button>
+    </div>
+    <div id="addGroupFromList" style="display:none">
+      ${available.length > 0 ? `
+        <p style="color:var(--text3);margin-bottom:12px">Ro'yxatdan o'tgan foydalanuvchilarni tanlang:</p>
+        <div style="max-height:300px;overflow-y:auto">
+          ${available.map(u => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="handleAddGroupMemberFromList('${groupId}','${u.id}','${u.username}')">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
+              <div style="flex:1"><div style="font-weight:600">${security.sanitizeHTML(u.username)}</div><div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')}</div></div>
+              <button class="btn btn-sm btn-success">+</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">👤</div><div class="empty-state-title">Boshqa foydalanuvchilar yo\'q</div><div class="empty-state-text">Ism bilan qo\'shishdan foydalaning</div></div>'}
+    </div>
+  `, '');
+}
+
+function switchAddGroupMemberTab(tab) {
+  document.getElementById('addGroupByName').style.display = tab === 'name' ? 'block' : 'none';
+  document.getElementById('addGroupFromList').style.display = tab === 'list' ? 'block' : 'none';
+  document.querySelectorAll('#addGroupMemberTabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'name' && i === 0) || (tab === 'list' && i === 1));
+  });
+}
+
+function handleAddGroupMemberByName(groupId) {
+  const name = document.getElementById('addGroupMemberName')?.value?.trim();
+  if (!name) return showToast('Ismni kiriting', 'error');
+  const group = groupManager.getById(groupId);
+  if (!group) return showToast('Guruh topilmadi', 'error');
+  group.members.push({ id: security.generateId(), name, role: 'member', joinedAt: Date.now() });
+  storage.set('groups', groupManager.groups);
+  document.querySelector('.modal-overlay')?.remove();
+  showToast(name + ' guruhga qo\'shildi!', 'success');
+  renderApp();
+}
+
+function handleAddGroupMemberFromList(groupId, userId, username) {
+  const group = groupManager.getById(groupId);
+  if (!group) return showToast('Guruh topilmadi', 'error');
+  if (group.members.find(m => m.id === userId)) return showToast('Bu foydalanuvchi allaqachon guruhda', 'warning');
+  group.members.push({ id: userId, name: username, role: 'member', joinedAt: Date.now() });
+  storage.set('groups', groupManager.groups);
+  document.querySelector('.modal-overlay')?.remove();
+  showToast(username + ' guruhga qo\'shildi!', 'success');
+  renderApp();
+}
+
+function removeGroupMember(groupId, memberId) {
+  const group = groupManager.getById(groupId);
+  if (!group) return;
+  group.members = group.members.filter(m => m.id !== memberId);
+  storage.set('groups', groupManager.groups);
+  showToast('A\'zo guruhdan olib tashlandi', 'success');
+  renderApp();
+}
+
+function showAddTestToGroupModal(groupId) {
+  const myTests = testEngine.getUserTests(auth.currentUser?.id);
+  const group = groupManager.getById(groupId);
+  const testsNotInGroup = myTests.filter(t => !group.tests.includes(t.id));
+
+  showModal(`📋 Guruhga test qo'shish`, `
+    <div class="tabs" id="addTestTabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchAddTestTab('existing')">📝 Mavjud test</button>
+      <button class="tab" onclick="switchAddTestTab('new')">✏️ Yangi test</button>
+    </div>
+    <div id="addExistingTest">
+      ${testsNotInGroup.length > 0 ? `
+        <p style="color:var(--text3);margin-bottom:12px">Mavjud testlaringizdan tanlang:</p>
+        <div style="max-height:300px;overflow-y:auto">
+          ${testsNotInGroup.map(t => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="handleAddTestToGroup('${groupId}','${t.id}')">
+              <div style="flex:1"><div style="font-weight:600">${security.sanitizeHTML(t.title)}</div><div style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.status}</div></div>
+              <button class="btn btn-sm btn-success">+ Qo'shish</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">📋</div><div class="empty-state-title">Qo\'shish uchun test yo\'q</div><div class="empty-state-text">Avval test tuzing, keyin shu yerga qo\'shing</div></div>'}
+    </div>
+    <div id="addNewTest" style="display:none">
+      <p style="color:var(--text3);margin-bottom:16px">Yangi test tuzib, uni guruhga qo'shing:</p>
+      <button class="btn btn-primary btn-block" onclick="navigate('create-test',{groupId:'${groupId}'})">✏️ Yangi test tuzish</button>
+    </div>
+  `, '');
+}
+
+function switchAddTestTab(tab) {
+  document.getElementById('addExistingTest').style.display = tab === 'existing' ? 'block' : 'none';
+  document.getElementById('addNewTest').style.display = tab === 'new' ? 'block' : 'none';
+  document.querySelectorAll('#addTestTabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'existing' && i === 0) || (tab === 'new' && i === 1));
+  });
+}
+
+function handleAddTestToGroup(groupId, testId) {
+  groupManager.addTest(groupId, testId);
+  document.querySelector('.modal-overlay')?.remove();
+  showToast('Test guruhga qo\'shildi!', 'success');
+  renderApp();
+}
+
+function removeTestFromGroup(groupId, testId) {
+  const group = groupManager.getById(groupId);
+  if (!group) return;
+  group.tests = group.tests.filter(t => t !== testId);
+  storage.set('groups', groupManager.groups);
+  showToast('Test guruhdan olib tashlandi', 'success');
   renderApp();
 }
 
@@ -2965,6 +3153,11 @@ function attachEvents() {
       document.getElementById('notifPanel')?.classList.remove('open');
     }
   };
+
+  // Agar test tuzish sahifasida bo'lsa, birinchi savolni avtomatik qo'shish
+  if (currentPage === 'create-test' && document.getElementById('questionsList') && questionCount === 0) {
+    addQuestion();
+  }
 }
 
 // ==================== AUTO-SAVE & STREAK ====================
