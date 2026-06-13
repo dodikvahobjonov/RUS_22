@@ -1579,6 +1579,7 @@ function renderCreateTest() {
     <h2 style="margin-bottom:24px">✏️ Test tuzish</h2>
     <div class="tabs" id="createTabs">
       <button class="tab active" onclick="switchCreateTab('manual')">Qo'lda kiritish</button>
+      <button class="tab" onclick="switchCreateTab('bulk')">📦 Bir martada kiritish</button>
       <button class="tab" onclick="switchCreateTab('ai')">🤖 AI generatsiya</button>
     </div>
 
@@ -1622,6 +1623,59 @@ function renderCreateTest() {
       </div>
 
       <button class="btn btn-primary btn-lg btn-block" onclick="handleCreateTest()">🚀 Testni yaratish</button>
+    </div>
+
+    <div id="createBulk" style="display:none">
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:16px">📦 Savollarni bir martada kiritish</h3>
+        <p style="color:var(--text3);margin-bottom:12px">Barcha savollarnu bir tekstda kiriting. Har bir savol alohida qator bo'lishi kerak.</p>
+
+        <div class="card" style="margin-bottom:16px;background:var(--bg);border-color:var(--primary)">
+          <h4 style="margin-bottom:8px;color:var(--primary2)">📐 Format:</h4>
+          <pre style="font-size:.85rem;color:var(--text2);line-height:1.8;white-space:pre-wrap">Savol matni
+A) Birinchi variant
+B) Ikkinchi variant
+C) Uchinchi variant
+D) To'rtinchi variant
+To'g'ri: A
+
+Keyingi savol matni
+A) Variant 1
+B) Variant 2
+C) Variant 3
+D) Variant 4
+To'g'ri: C</pre>
+          <p style="color:var(--accent);font-size:.8rem;margin-top:8px">💡 Har bir savol oralig'ida bo'sh qator qoldiring. "To'g'ri" qatorida to'g'ri javob harfini yozing (A, B, C, D...).</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Test nomi</label>
+          <input class="form-input" id="bulkTestTitle" placeholder="Misol: Matematika testi" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tavsif</label>
+          <input class="form-input" id="bulkTestDesc" placeholder="Test haqida qisqacha..." maxlength="300">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Vaqt (soniya)</label>
+            <input class="form-input" id="bulkTimer" type="number" value="30" min="5" max="300">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maks o'yinchilar</label>
+            <input class="form-input" id="bulkMaxPlayers" type="number" value="50" min="2" max="200">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="bulkShuffle" checked> Savollarni aralashtirish</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="bulkPublic"> Ommaviy test</label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📝 Savollar matni</label>
+          <textarea class="form-input" id="bulkQuestionsText" placeholder="Yuqoridagi formatda savollarni kiriting..." style="min-height:250px;font-size:.9rem"></textarea>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="handleBulkCreate()">📦 Testni yaratish</button>
+      </div>
     </div>
 
     <div id="createAI" style="display:none">
@@ -1687,10 +1741,86 @@ function addQuestion() {
 
 function switchCreateTab(tab) {
   document.getElementById('createManual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.getElementById('createBulk').style.display = tab === 'bulk' ? 'block' : 'none';
   document.getElementById('createAI').style.display = tab === 'ai' ? 'block' : 'none';
   document.querySelectorAll('#createTabs .tab').forEach((t, i) => {
-    t.classList.toggle('active', (tab === 'manual' && i === 0) || (tab === 'ai' && i === 1));
+    t.classList.toggle('active', (tab === 'manual' && i === 0) || (tab === 'bulk' && i === 1) || (tab === 'ai' && i === 2));
   });
+}
+
+function parseBulkQuestions(text) {
+  if (!text || !text.trim()) return [];
+  const questions = [];
+  // Split by blank lines (one or more empty lines between questions)
+  const blocks = text.split(/\n\s*\n/);
+  for (const block of blocks) {
+    if (!block.trim()) continue;
+    const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 2) continue;
+    let questionText = '';
+    const options = [];
+    let correctIndex = 0;
+    for (const line of lines) {
+      // Check for option pattern: A) text, A. text, A text, a) text
+      const optMatch = line.match(/^([A-Ha-h])[).\s]+(.+)/);
+      if (optMatch) {
+        const letter = optMatch[1].toUpperCase();
+        const letterIndex = letter.charCodeAt(0) - 65; // A=0, B=1, C=2...
+        options[letterIndex] = optMatch[2].trim();
+        continue;
+      }
+      // Check for correct answer pattern: To'g'ri: A, Correct: B, Javob: C, =A, *A
+      const correctMatch = line.match(/^(?:To'g'ri|Togri|Correct|Javob|Answer)[:\s]*([A-Ha-h])/i);
+      if (correctMatch) {
+        correctIndex = correctMatch[1].toUpperCase().charCodeAt(0) - 65;
+        continue;
+      }
+      // Also support =A or *A format for correct answer
+      const starMatch = line.match(/^[*=]([A-Ha-h])/);
+      if (starMatch) {
+        correctIndex = starMatch[1].toUpperCase().charCodeAt(0) - 65;
+        continue;
+      }
+      // Otherwise it's question text
+      if (questionText) questionText += ' ' + line;
+      else questionText = line;
+    }
+    // Clean up options (remove undefined holes)
+    const cleanOptions = options.filter(o => o !== undefined && o !== '');
+    if (questionText && cleanOptions.length >= 2) {
+      // Adjust correctIndex if options had gaps
+      const originalCorrectOption = options[correctIndex];
+      const newCorrectIndex = cleanOptions.indexOf(originalCorrectOption);
+      questions.push({
+        id: security.generateId(),
+        text: questionText,
+        type: 'multiple',
+        options: cleanOptions,
+        correctAnswer: newCorrectIndex >= 0 ? newCorrectIndex : 0,
+        points: 10,
+        explanation: ''
+      });
+    }
+  }
+  return questions;
+}
+
+function handleBulkCreate() {
+  const title = document.getElementById('bulkTestTitle')?.value?.trim();
+  if (!title) return showToast('Test nomini kiriting', 'error');
+  const desc = document.getElementById('bulkTestDesc')?.value?.trim() || '';
+  const timer = parseInt(document.getElementById('bulkTimer')?.value) || 30;
+  const maxPlayers = parseInt(document.getElementById('bulkMaxPlayers')?.value) || 50;
+  const shuffle = document.getElementById('bulkShuffle')?.checked ?? true;
+  const isPublic = document.getElementById('bulkPublic')?.checked ?? false;
+  const text = document.getElementById('bulkQuestionsText')?.value || '';
+
+  const questions = parseBulkQuestions(text);
+  if (questions.length === 0) return showToast('Savollar topilmadi. Formatni tekshiring — har bir savol alohida bo\'lim bo\'lishi va A) B) C) D) variantlar bo\'lishi kerak', 'error');
+
+  const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+  showToast(`${questions.length} ta savol bilan test yaratildi!`, 'success');
+  navigate('test-room', { testId: test.id });
 }
 
 function handleCreateTest() {
@@ -2641,13 +2771,63 @@ function duplicateTest(testId) {
 }
 
 function addPlayerManual(testId) {
+  const registeredUsers = auth.getAllUsers().filter(u => u.id !== auth.currentUser?.id);
+  const test = testEngine.getTest(testId);
+  const existingPlayerIds = (test?.players || []).map(p => p.id);
+  const availableUsers = registeredUsers.filter(u => !existingPlayerIds.includes(u.id));
+  
   showModal('👤 Odam qo\'shish', `
-    <p style="color:var(--text3);margin-bottom:16px">Testga qo'shmoqchi bo'lgan odamning ismini kiriting</p>
-    <div class="form-group">
-      <label class="form-label">Ism</label>
-      <input class="form-input" id="addPlayerName" placeholder="Foydalanuvchi ismi...">
+    <div class="tabs" id="addPlayerTabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchAddPlayerTab('name')">✏️ Ism bilan</button>
+      <button class="tab" onclick="switchAddPlayerTab('list')">👥 Ro'yxatdan</button>
     </div>
-  `, `<button class="btn btn-primary" onclick="handleAddPlayer('${testId}')">Qo'shish</button>`);
+    
+    <div id="addByName">
+      <p style="color:var(--text3);margin-bottom:12px">Ismni kiriting (tizimdan ro'yxatdan o'tgan bo'lishi shart emas)</p>
+      <div class="form-group">
+        <label class="form-label">Ism</label>
+        <input class="form-input" id="addPlayerName" placeholder="Foydalanuvchi ismi...">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleAddPlayer('${testId}')">Qo'shish</button>
+    </div>
+    
+    <div id="addFromList" style="display:none">
+      ${availableUsers.length > 0 ? `
+        <p style="color:var(--text3);margin-bottom:12px">Ro'yxatdan o'tgan foydalanuvchilarni tanlang:</p>
+        <div style="max-height:300px;overflow-y:auto">
+          ${availableUsers.map(u => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:var(--transition)" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="handleAddRegisteredPlayer('${testId}','${u.id}','${u.username}')">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
+              <div style="flex:1">
+                <div style="font-weight:600">${security.sanitizeHTML(u.username)}</div>
+                <div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')} • ${u.role||'student'}</div>
+              </div>
+              <button class="btn btn-sm btn-success">+ Qo'shish</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">👤</div><div class="empty-state-title">Boshqa foydalanuvchilar yo\'q</div><div class="empty-state-text">Hozirda tizimda boshqa ro\'yxatdan o\'tgan foydalanuvchi yo\'q. Ism bilan qo\'shish tugmasidan foydalaning.</div></div>'}
+    </div>
+  `, '');
+}
+
+function switchAddPlayerTab(tab) {
+  document.getElementById('addByName').style.display = tab === 'name' ? 'block' : 'none';
+  document.getElementById('addFromList').style.display = tab === 'list' ? 'block' : 'none';
+  document.querySelectorAll('#addPlayerTabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'name' && i === 0) || (tab === 'list' && i === 1));
+  });
+}
+
+function handleAddRegisteredPlayer(testId, userId, username) {
+  const added = testEngine.addPlayerToTest(testId, { id: userId, name: username, role: 'player' });
+  if (added) {
+    showToast(username + ' testga qo\'shildi!', 'success');
+    document.querySelector('.modal-overlay')?.remove();
+    renderApp();
+  } else {
+    showToast('Bu foydalanuvchi allaqachon qo\'shilgan yoki test to\'la', 'warning');
+  }
 }
 
 function handleAddPlayer(testId) {
