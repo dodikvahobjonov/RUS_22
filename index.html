@@ -1221,6 +1221,8 @@ let currentPage = 'home';
 let pageParams = {};
 
 function navigate(page, params = {}) {
+  // Modalni yopish (agar ochiq bo'lsa)
+  document.querySelector('.modal-overlay')?.remove();
   currentPage = page;
   pageParams = params;
   renderApp();
@@ -1728,10 +1730,14 @@ To'g'ri: C</pre>
 }
 
 let questionCount = 0;
+function resetQuestionCount() {
+  questionCount = 0;
+}
 function addQuestion() {
   questionCount++;
   const id = questionCount;
   const container = document.getElementById('questionsList');
+  if (!container) { questionCount--; return; }
   const div = document.createElement('div');
   div.className = 'card animate-scale';
   div.id = `q-${id}`;
@@ -3154,8 +3160,9 @@ function attachEvents() {
     }
   };
 
-  // Agar test tuzish sahifasida bo'lsa, birinchi savolni avtomatik qo'shish
-  if (currentPage === 'create-test' && document.getElementById('questionsList') && questionCount === 0) {
+  // Agar test tuzish sahifasida bo'lsa, savol sonini reset qilish va birinchi savolni avtomatik qo'shish
+  if (currentPage === 'create-test') {
+    resetQuestionCount();
     addQuestion();
   }
 }
