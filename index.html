@@ -1665,24 +1665,34 @@ function renderCreateTest() {
     <div id="createBulk" style="display:none">
       <div class="card" style="margin-bottom:20px">
         <h3 style="margin-bottom:16px">📦 Savollarni bir martada kiritish</h3>
-        <p style="color:var(--text3);margin-bottom:12px">Barcha savollarnu bir tekstda kiriting. Har bir savol alohida qator bo'lishi kerak.</p>
+        <p style="color:var(--text3);margin-bottom:12px">Barcha savollarni bir tekstda kiriting. Tizim avtomatik ajratadi.</p>
 
         <div class="card" style="margin-bottom:16px;background:var(--bg);border-color:var(--primary)">
-          <h4 style="margin-bottom:8px;color:var(--primary2)">📐 Format:</h4>
-          <pre style="font-size:.85rem;color:var(--text2);line-height:1.8;white-space:pre-wrap">Savol matni
+          <h4 style="margin-bottom:8px;color:var(--primary2)">📐 Qo'llab-quvvatlanadigan formatlar:</h4>
+          <pre style="font-size:.82rem;color:var(--text2);line-height:1.8;white-space:pre-wrap">1-usul (harfli variantlar):
+Savol matni
 A) Birinchi variant
 B) Ikkinchi variant
 C) Uchinchi variant
 D) To'rtinchi variant
 To'g'ri: A
 
-Keyingi savol matni
-A) Variant 1
-B) Variant 2
-C) Variant 3
-D) Variant 4
-To'g'ri: C</pre>
-          <p style="color:var(--accent);font-size:.8rem;margin-top:8px">💡 Har bir savol oralig'ida bo'sh qator qoldiring. "To'g'ri" qatorida to'g'ri javob harfini yozing (A, B, C, D...).</p>
+2-usul (raqamli variantlar):
+Savol matni
+1) Birinchi variant
+2) Ikkinchi variant
+3) Uchinchi variant
+4) To'rtinchi variant
+To'g'ri: 1
+
+3-usul (A. B. C. D. nuqtali):
+Savol matni
+A. Birinchi variant
+B. Ikkinchi variant
+C. Uchinchi variant
+D. To'rtinchi variant
+To'g'ri: A</pre>
+          <p style="color:var(--accent);font-size:.8rem;margin-top:8px">💡 Maslahatlar: Savollar orasida bo'sh qator qoldiring (lekin majburiy emas). "To'g'ri" qatorini yozmasangiz, birinchi variant to'g'ri hisoblanadi.</p>
         </div>
 
         <div class="form-group">
@@ -1709,7 +1719,7 @@ To'g'ri: C</pre>
         </div>
         <div class="form-group">
           <label class="form-label">📝 Savollar matni</label>
-          <textarea class="form-input" id="bulkQuestionsText" placeholder="Yuqoridagi formatda savollarni kiriting..." style="min-height:250px;font-size:.9rem"></textarea>
+          <textarea class="form-input" id="bulkQuestionsText" placeholder="Yuqoridagi formatda savollarni kiriting..." style="min-height:250px;font-size:.9rem" oninput="autoPreviewBulk()"></textarea>
         </div>
         <div id="bulkPreview" style="display:none;margin-bottom:16px">
           <div class="card" style="background:var(--bg);border-color:var(--success)">
@@ -1806,58 +1816,147 @@ function switchCreateTab(tab) {
 function parseBulkQuestions(text) {
   if (!text || !text.trim()) return [];
   const questions = [];
-  // Split by blank lines (one or more empty lines between questions)
-  const blocks = text.split(/\n\s*\n/);
+
+  // Unicode apostroflarni oddiy apostrofga o'tkazish
+  let normalized = text
+    .replace(/[\u02BC\u2019\u2018\u201B\uFF07]/g, "'")  // turli apostrof belgilari
+    .replace(/[\u201C\u201D]/g, '"')  // smart quotes
+    .replace(/\r\n/g, '\n')  // Windows line breaks
+    .replace(/\r/g, '\n');  // Mac line breaks
+
+  // Avval bo'sh qatorlar bilan ajratilgan bloklarni tekshiramiz
+  let blocks = normalized.split(/\n\s*\n/);
+  // Agar faqat 1 blok bo'lsa va unda ko'p savollar bo'lishi mumkin bo'lsa
+  if (blocks.length <= 1) {
+    // Bo'sh qator yo'q - savol chegaralarini aniqlash
+    blocks = splitQuestionsNoBlankLines(normalized);
+  }
+
   for (const block of blocks) {
     if (!block.trim()) continue;
     const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l);
     if (lines.length < 2) continue;
+
     let questionText = '';
     const options = [];
-    let correctIndex = 0;
+    let correctIndex = -1;
+    let questionTextLines = [];
+    let optionsStarted = false;
+
     for (const line of lines) {
-      // Check for option pattern: A) text, A. text, A text, a) text
-      const optMatch = line.match(/^([A-Ha-h])[).\s]+(.+)/);
+      // Raqamli variantlar: 1) 2) 3) 4) yoki 1. 2. 3. 4.
+      const numOptMatch = line.match(/^(\d+)[).\s\-]+(.+)/);
+      if (numOptMatch && parseInt(numOptMatch[1]) <= 8) {
+        const num = parseInt(numOptMatch[1]) - 1;
+        options[num] = numOptMatch[2].trim();
+        optionsStarted = true;
+        continue;
+      }
+
+      // Harfli variantlar: A) A. A- a) va h.k.
+      const optMatch = line.match(/^([A-Ha-h])[).\s\-:]+(.+)/);
       if (optMatch) {
         const letter = optMatch[1].toUpperCase();
-        const letterIndex = letter.charCodeAt(0) - 65; // A=0, B=1, C=2...
+        const letterIndex = letter.charCodeAt(0) - 65;
         options[letterIndex] = optMatch[2].trim();
+        optionsStarted = true;
         continue;
       }
-      // Check for correct answer pattern: To'g'ri: A, Correct: B, Javob: C, =A, *A
-      const correctMatch = line.match(/^(?:To'g'ri|Togri|Correct|Javob|Answer)[:\s]*([A-Ha-h])/i);
-      if (correctMatch) {
-        correctIndex = correctMatch[1].toUpperCase().charCodeAt(0) - 65;
-        continue;
+
+      // To'g'ri javob patternlari - turli apostrof va formatlar bilan
+      const correctPatterns = [
+        /^(?:To['\u02BC\u2019]?g['\u02BC\u2019]?ri|Togri|Correct|Javob|Answer)[:\s]*([A-Ha-h\d])/im,
+        /^[*=]([A-Ha-h])\s*$/m,
+        /^\(\s*([A-Ha-h])\s*\)\s*$/m
+      ];
+      let matchedCorrect = false;
+      for (const pattern of correctPatterns) {
+        const cm = line.match(pattern);
+        if (cm) {
+          const val = cm[1];
+          if (/^\d$/.test(val)) {
+            correctIndex = parseInt(val) - 1;
+          } else {
+            correctIndex = val.toUpperCase().charCodeAt(0) - 65;
+          }
+          matchedCorrect = true;
+          break;
+        }
       }
-      // Also support =A or *A format for correct answer
-      const starMatch = line.match(/^[*=]([A-Ha-h])/);
-      if (starMatch) {
-        correctIndex = starMatch[1].toUpperCase().charCodeAt(0) - 65;
-        continue;
+      if (matchedCorrect) continue;
+
+      // Variant boshlanishidan oldingi matn - savol matni
+      if (!optionsStarted) {
+        questionTextLines.push(line);
+      } else {
+        // Variantlar boshlanganidan keyin matn kelsa - yangi savol boshlangan bo'lishi mumkin
+        // Lekin biz hozirgi savolni tugatamiz
+        break;
       }
-      // Otherwise it's question text
-      if (questionText) questionText += ' ' + line;
-      else questionText = line;
     }
-    // Clean up options (remove undefined holes)
+
+    questionText = questionTextLines.join(' ');
+
+    // Clean up options
     const cleanOptions = options.filter(o => o !== undefined && o !== '');
     if (questionText && cleanOptions.length >= 2) {
-      // Adjust correctIndex if options had gaps
-      const originalCorrectOption = options[correctIndex];
-      const newCorrectIndex = cleanOptions.indexOf(originalCorrectOption);
+      // Agar correctIndex topilmagan yoki noto'g'ri bo'lsa, birinchi variantni tanlaymiz
+      if (correctIndex < 0 || correctIndex >= cleanOptions.length) {
+        // options massivida correctIndex bo'sh joylar tufayli siljishi mumkin
+        const originalCorrect = options[correctIndex];
+        const newIdx = cleanOptions.indexOf(originalCorrect);
+        correctIndex = newIdx >= 0 ? newIdx : 0;
+      }
       questions.push({
         id: security.generateId(),
         text: questionText,
         type: 'multiple',
         options: cleanOptions,
-        correctAnswer: newCorrectIndex >= 0 ? newCorrectIndex : 0,
+        correctAnswer: correctIndex,
         points: 10,
         explanation: ''
       });
     }
   }
   return questions;
+}
+
+// Bo'sh qatorlar yo'q matndan savollarni ajratish
+function splitQuestionsNoBlankLines(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  if (lines.length === 0) return [text];
+
+  const blocks = [];
+  let currentBlock = []
+  let hasOptionsInBlock = false;
+
+  for (const line of lines) {
+    // Harfli variant patterni
+    const isLetterOpt = /^[A-Ha-h][).\s\-:]+.+/.test(line);
+    // Raqamli variant patterni
+    const isNumOpt = /^\d+[).\s\-:]+.+/.test(line) && parseInt(line) <= 8;
+    // To'g'ri javob patterni
+    const isCorrectAnswer = /^(?:To['\u02BC\u2019]?g['\u02BC\u2019]?ri|Togri|Correct|Javob|Answer)[:\s]*[A-Ha-h\d]/i.test(line)
+      || /^[*=][A-Ha-h]\s*$/.test(line);
+
+    const isOption = isLetterOpt || isNumOpt;
+
+    // Agar yangi savol matni kelsa va oldingi blokda variantlar bo'lgan bo'lsa
+    // ya'ni variantlardan keyin yangi matn keldi - demak yangi savol boshlandi
+    if (!isOption && !isCorrectAnswer && hasOptionsInBlock) {
+      // Joriq blokni saqlash
+      if (currentBlock.length > 0) blocks.push(currentBlock.join('\n'));
+      // Yangi blok boshlash
+      currentBlock = [line];
+      hasOptionsInBlock = false;
+    } else {
+      currentBlock.push(line);
+      if (isOption) hasOptionsInBlock = true;
+    }
+  }
+
+  if (currentBlock.length > 0) blocks.push(currentBlock.join('\n'));
+  return blocks.length > 0 ? blocks : [text];
 }
 
 function previewBulkQuestions() {
@@ -1872,17 +1971,17 @@ function previewBulkQuestions() {
     countEl.textContent = questions.length;
     if (questions.length > 0) {
       listEl.innerHTML = questions.map((q, i) => `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
-        <strong>${i+1}. ${q.text}</strong><br>
-        <span style="color:var(--text3)">${q.options.map((o,j) => String.fromCharCode(65+j) + ') ' + o).join(' | ')}</span><br>
+        <strong>${i+1}. ${security.sanitizeHTML(q.text)}</strong><br>
+        <span style="color:var(--text3)">${q.options.map((o,j) => String.fromCharCode(65+j) + ') ' + security.sanitizeHTML(o)).join(' | ')}</span><br>
         <span style="color:var(--success)">To'g'ri: ${String.fromCharCode(65 + q.correctAnswer)}</span>
       </div>`).join('');
     } else {
       listEl.innerHTML = `<div style="color:var(--danger);padding:12px">
         ❌ Savollar topilmadi! Formatni tekshiring:<br>
-        • Har bir savol alohida bo'lim bo'lishi kerak<br>
-        • A) B) C) D) variantlar bo'lishi kerak<br>
-        • To'g'ri: A kabi to'g'ri javob ko'rsatilishi kerak<br>
-        • Savollar orasida bo'sh qator bo'lishi kerak
+        • Har bir savoldan keyin A) B) C) D) variantlar bo'lishi kerak<br>
+        • "To'g'ri: A" yoki "To'g'ri: 1" kabi to'g'ri javob ko'rsatilishi kerak<br>
+        • Savollar orasida bo'sh qator qoldiring (lekin majburiy emas)<br>
+        • Raqamli variantlar ham qo'llab-quvvatlanadi: 1) 2) 3) 4)
       </div>`;
     }
     preview.style.display = 'block';
@@ -1890,6 +1989,18 @@ function previewBulkQuestions() {
     console.error('previewBulkQuestions xatosi:', e);
     showToast(`Tekshirishda xato: ${e.message}`, 'error');
   }
+}
+
+// Auto-preview - foydalanuvchi yozayotganda avtomatik tekshirish
+let _autoPreviewTimer = null;
+function autoPreviewBulk() {
+  clearTimeout(_autoPreviewTimer);
+  _autoPreviewTimer = setTimeout(() => {
+    const text = document.getElementById('bulkQuestionsText')?.value || '';
+    if (text.trim().length > 20) {
+      previewBulkQuestions();
+    }
+  }, 800);
 }
 
 function handleBulkCreate() {
@@ -2385,15 +2496,27 @@ function showAddGroupMemberModal(groupId) {
   const existingIds = (group?.members || []).map(m => m.id);
   const available = registeredUsers.filter(u => !existingIds.includes(u.id));
 
+  // Foydalanuvchi nomlarini data-atribut orqali uzatamiz (apostrof muammosi uchun)
+  const userListHTML = available.map(u => {
+    const safeId = encodeURIComponent(u.id);
+    const safeName = encodeURIComponent(u.username || '');
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer" data-add-group-id="${groupId}" data-add-user-id="${safeId}" data-add-user-name="${safeName}" onclick="handleAddGroupMemberFromListData(this)">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
+        <div style="flex:1"><div style="font-weight:600">${security.sanitizeHTML(u.username)}</div><div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')}</div></div>
+        <button class="btn btn-sm btn-success">+</button>
+      </div>`;
+  }).join('');
+
   showModal(`👤 Guruhga a'zo qo'shish`, `
     <div class="tabs" id="addGroupMemberTabs" style="margin-bottom:16px">
       <button class="tab active" onclick="switchAddGroupMemberTab('name')">✏️ Ism bilan</button>
       <button class="tab" onclick="switchAddGroupMemberTab('list')">👥 Ro'yxatdan</button>
     </div>
     <div id="addGroupByName">
-      <p style="color:var(--text3);margin-bottom:12px">Istalgan odamning ismini kiriting:</p>
+      <p style="color:var(--text3);margin-bottom:12px">Istalgan odamning ismini kiriting (bir nechtasini vergul bilan ajrating):</p>
       <div class="form-group">
-        <input class="form-input" id="addGroupMemberName" placeholder="Ism kiriting...">
+        <input class="form-input" id="addGroupMemberName" placeholder="Ism kiriting... (masalan: Ali, Vali, O'tkir)" onkeypress="if(event.key==='Enter'){handleAddGroupMemberByName('${groupId}');event.preventDefault();}">
       </div>
       <button class="btn btn-primary btn-block" onclick="handleAddGroupMemberByName('${groupId}')">Qo'shish</button>
     </div>
@@ -2401,13 +2524,7 @@ function showAddGroupMemberModal(groupId) {
       ${available.length > 0 ? `
         <p style="color:var(--text3);margin-bottom:12px">Ro'yxatdan o'tgan foydalanuvchilarni tanlang:</p>
         <div style="max-height:300px;overflow-y:auto">
-          ${available.map(u => `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="handleAddGroupMemberFromList('${groupId}','${u.id}','${u.username}')">
-              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
-              <div style="flex:1"><div style="font-weight:600">${security.sanitizeHTML(u.username)}</div><div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')}</div></div>
-              <button class="btn btn-sm btn-success">+</button>
-            </div>
-          `).join('')}
+          ${userListHTML}
         </div>
       ` : '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">👤</div><div class="empty-state-title">Boshqa foydalanuvchilar yo\'q</div><div class="empty-state-text">Ism bilan qo\'shishdan foydalaning</div></div>'}
     </div>
@@ -2425,17 +2542,59 @@ function switchAddGroupMemberTab(tab) {
 function handleAddGroupMemberByName(groupId) {
   try {
     const nameInput = document.getElementById('addGroupMemberName');
-    const name = nameInput?.value?.trim();
-    if (!name) return showToast('Ismni kiriting', 'error');
+    const rawName = nameInput?.value?.trim();
+    if (!rawName) return showToast('Ismni kiriting', 'error');
     const group = groupManager.getById(groupId);
-    if (!group) return showToast(`Guruh topilmadi`, 'error');
-    group.members.push({ id: security.generateId(), name, role: 'member', joinedAt: Date.now() });
-    storage.set('groups', groupManager.groups);
-    document.querySelector('.modal-overlay')?.remove();
-    showToast(name + ` guruhga qo'shildi!`, 'success');
-    renderApp();
+    if (!group) return showToast('Guruh topilmadi', 'error');
+
+    // Vergul bilan ajratilgan bir nechta ismni qo'llab-quvvatlash
+    const names = rawName.split(/[,;]+/).map(n => n.trim()).filter(n => n.length > 0);
+    if (names.length === 0) return showToast('Ismni kiriting', 'error');
+
+    let addedCount = 0;
+    for (const name of names) {
+      // Takrorlanmaslikni tekshirish
+      const alreadyExists = group.members.some(m => m.name.toLowerCase() === name.toLowerCase());
+      if (alreadyExists) {
+        showToast(name + ' allaqachon guruhda', 'warning');
+        continue;
+      }
+      group.members.push({ id: security.generateId(), name, role: 'member', joinedAt: Date.now() });
+      addedCount++;
+    }
+
+    if (addedCount > 0) {
+      storage.set('groups', groupManager.groups);
+      document.querySelector('.modal-overlay')?.remove();
+      const msg = addedCount === 1 ? names[0] + ` guruhga qo'shildi!` : `${addedCount} ta a'zo guruhga qo'shildi!`;
+      showToast(msg, 'success');
+      renderApp();
+    }
   } catch(e) {
     console.error('handleAddGroupMemberByName xatosi:', e);
+    showToast(`A'zo qo'shishda xato: ${e.message}`, 'error');
+  }
+}
+
+// Data-atribut orqali foydalanuvchi qo'shish (apostrof muammosini hal qiladi)
+function handleAddGroupMemberFromListData(el) {
+  try {
+    const groupId = el.dataset.addGroupId;
+    const userId = decodeURIComponent(el.dataset.addUserId || '');
+    const username = decodeURIComponent(el.dataset.addUserName || '');
+    if (!groupId || !userId) return showToast('Ma\'lumot topilmadi', 'error');
+
+    const group = groupManager.getById(groupId);
+    if (!group) return showToast('Guruh topilmadi', 'error');
+    if (group.members.find(m => m.id === userId)) return showToast('Bu foydalanuvchi allaqachon guruhda', 'warning');
+
+    group.members.push({ id: userId, name: username, role: 'member', joinedAt: Date.now() });
+    storage.set('groups', groupManager.groups);
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(username + ` guruhga qo'shildi!`, 'success');
+    renderApp();
+  } catch(e) {
+    console.error('handleAddGroupMemberFromListData xatosi:', e);
     showToast(`A'zo qo'shishda xato: ${e.message}`, 'error');
   }
 }
@@ -2443,7 +2602,7 @@ function handleAddGroupMemberByName(groupId) {
 function handleAddGroupMemberFromList(groupId, userId, username) {
   try {
     const group = groupManager.getById(groupId);
-    if (!group) return showToast(`Guruh topilmadi`, 'error');
+    if (!group) return showToast('Guruh topilmadi', 'error');
     if (group.members.find(m => m.id === userId)) return showToast('Bu foydalanuvchi allaqachon guruhda', 'warning');
     group.members.push({ id: userId, name: username, role: 'member', joinedAt: Date.now() });
     storage.set('groups', groupManager.groups);
@@ -3057,6 +3216,21 @@ function addPlayerManual(testId) {
   const existingPlayerIds = (test?.players || []).map(p => p.id);
   const availableUsers = registeredUsers.filter(u => !existingPlayerIds.includes(u.id));
   
+  // Data-atribut orqali uzatish (apostrof muammosini oldini olish)
+  const userListHTML = availableUsers.map(u => {
+    const safeId = encodeURIComponent(u.id);
+    const safeName = encodeURIComponent(u.username || '');
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:var(--transition)" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" data-add-test-id="${testId}" data-add-user-id="${safeId}" data-add-user-name="${safeName}" onclick="handleAddRegisteredPlayerData(this)">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-weight:600">${security.sanitizeHTML(u.username)}</div>
+          <div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')} • ${u.role||'student'}</div>
+        </div>
+        <button class="btn btn-sm btn-success">+ Qo'shish</button>
+      </div>`;
+  }).join('');
+
   showModal('👤 Odam qo\'shish', `
     <div class="tabs" id="addPlayerTabs" style="margin-bottom:16px">
       <button class="tab active" onclick="switchAddPlayerTab('name')">✏️ Ism bilan</button>
@@ -3067,7 +3241,7 @@ function addPlayerManual(testId) {
       <p style="color:var(--text3);margin-bottom:12px">Ismni kiriting (tizimdan ro'yxatdan o'tgan bo'lishi shart emas)</p>
       <div class="form-group">
         <label class="form-label">Ism</label>
-        <input class="form-input" id="addPlayerName" placeholder="Foydalanuvchi ismi...">
+        <input class="form-input" id="addPlayerName" placeholder="Foydalanuvchi ismi..." onkeypress="if(event.key==='Enter'){handleAddPlayer('${testId}');event.preventDefault();}">
       </div>
       <button class="btn btn-primary btn-block" onclick="handleAddPlayer('${testId}')">Qo'shish</button>
     </div>
@@ -3076,16 +3250,7 @@ function addPlayerManual(testId) {
       ${availableUsers.length > 0 ? `
         <p style="color:var(--text3);margin-bottom:12px">Ro'yxatdan o'tgan foydalanuvchilarni tanlang:</p>
         <div style="max-height:300px;overflow-y:auto">
-          ${availableUsers.map(u => `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:var(--transition)" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="handleAddRegisteredPlayer('${testId}','${u.id}','${u.username}')">
-              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem">${(u.username||'?')[0].toUpperCase()}</div>
-              <div style="flex:1">
-                <div style="font-weight:600">${security.sanitizeHTML(u.username)}</div>
-                <div style="font-size:.8rem;color:var(--text3)">${security.sanitizeHTML(u.email||'')} • ${u.role||'student'}</div>
-              </div>
-              <button class="btn btn-sm btn-success">+ Qo'shish</button>
-            </div>
-          `).join('')}
+          ${userListHTML}
         </div>
       ` : '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">👤</div><div class="empty-state-title">Boshqa foydalanuvchilar yo\'q</div><div class="empty-state-text">Hozirda tizimda boshqa ro\'yxatdan o\'tgan foydalanuvchi yo\'q. Ism bilan qo\'shish tugmasidan foydalaning.</div></div>'}
     </div>
@@ -3101,6 +3266,22 @@ function switchAddPlayerTab(tab) {
 }
 
 function handleAddRegisteredPlayer(testId, userId, username) {
+  const added = testEngine.addPlayerToTest(testId, { id: userId, name: username, role: 'player' });
+  if (added) {
+    showToast(username + ' testga qo\'shildi!', 'success');
+    document.querySelector('.modal-overlay')?.remove();
+    renderApp();
+  } else {
+    showToast('Bu foydalanuvchi allaqachon qo\'shilgan yoki test to\'la', 'warning');
+  }
+}
+
+// Data-atribut orqali foydalanuvchi qo'shish (apostrof muammosini hal qiladi)
+function handleAddRegisteredPlayerData(el) {
+  const testId = el.dataset.addTestId;
+  const userId = decodeURIComponent(el.dataset.addUserId || '');
+  const username = decodeURIComponent(el.dataset.addUserName || '');
+  if (!testId || !userId) return showToast('Ma\'lumot topilmadi', 'error');
   const added = testEngine.addPlayerToTest(testId, { id: userId, name: username, role: 'player' });
   if (added) {
     showToast(username + ' testga qo\'shildi!', 'success');
@@ -3261,13 +3442,12 @@ function attachEvents() {
     }
   };
 
-  // Agar test tuzish sahifasida bo'lsa, savol sonini reset qilish va birinchi savolni avtomatik qo'shish
+  // Agar test tuzish sahifasida bo'lsa va savollar bo'sh bo'lsa, birinchi savolni avtomatik qo'shish
   if (currentPage === 'create-test') {
     try {
-      questionCount = 0;
       const ql = document.getElementById('questionsList');
-      if (ql) {
-        ql.innerHTML = '';
+      if (ql && ql.children.length === 0) {
+        questionCount = 0;
         addQuestion();
       }
     } catch(e) {
