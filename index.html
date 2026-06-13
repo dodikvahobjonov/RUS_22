@@ -750,6 +750,184 @@ class TestEngine {
     storage.set('tests', this.tests);
   }
 
+  // Testni URL orqali ulashish (yaratuvchi chiqib ketsa ham ishlaydi)
+  encodeTestForShare(testId) {
+    const test = this.getTest(testId);
+    if (!test) return null;
+    const shareData = {
+      t: test.title,
+      d: test.description || '',
+      q: test.questions.map(q => ({
+        t: q.text,
+        o: q.options,
+        c: q.correctAnswer,
+        p: q.points || 10
+      })),
+      tm: test.timer || 30,
+      mp: test.maxPlayers || 50,
+      sh: test.shuffle ?? true,
+      pub: test.settings?.isPublic ?? true,
+      by: test.createdByName || '',
+      v: 2
+    };
+    try {
+      const json = JSON.stringify(shareData);
+      const encoded = btoa(unescape(encodeURIComponent(json)));
+      return encoded;
+    } catch (e) { console.error('Encode error:', e); return null; }
+  }
+
+  decodeTestFromShare(encoded) {
+    try {
+      const json = decodeURIComponent(escape(atob(encoded)));
+      const data = JSON.parse(json);
+      if (!data.t || !data.q || !data.q.length) return null;
+      const test = {
+        id: security.generateId(),
+        title: data.t,
+        description: data.d,
+        questions: data.q.map((q, i) => ({
+          id: security.generateId(),
+          text: q.t,
+          type: 'multiple',
+          options: q.o,
+          correctAnswer: q.c,
+          points: q.p || 10,
+          explanation: ''
+        })),
+        timer: data.tm || 30,
+        maxPlayers: data.mp || 50,
+        shuffle: data.sh ?? true,
+        isPublic: data.pub ?? true,
+        createdBy: null,
+        createdByName: data.by || 'Tashqi test',
+        createdAt: Date.now(),
+        roomCode: security.generateRoomCode(),
+        status: 'waiting',
+        players: [],
+        results: [],
+        questionIndex: 0,
+        settings: {
+          shuffle: data.sh ?? true,
+          timer: data.tm || 30,
+          showResults: true,
+          maxPlayers: data.mp || 50,
+          isPublic: data.pub ?? true
+        },
+        source: 'shared_link'
+      };
+      // Shared testni lokal bazaga saqlash
+      this.tests.push(test);
+      storage.set('tests', this.tests);
+      return test;
+    } catch (e) { console.error('Decode error:', e); return null; }
+  }
+
+  // Testni JSON faylga eksport qilish
+  exportTestAsJSON(testId) {
+    const test = this.getTest(testId);
+    if (!test) return null;
+    const exportData = {
+      platform: 'Zakovat',
+      version: CONFIG.VERSION,
+      exportedAt: new Date().toISOString(),
+      test: {
+        title: test.title,
+        description: test.description,
+        questions: test.questions.map(q => ({
+          text: q.text,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          points: q.points || 10
+        })),
+        timer: test.timer || 30,
+        maxPlayers: test.maxPlayers || 50,
+        shuffle: test.shuffle ?? true,
+        isPublic: test.settings?.isPublic ?? true
+      }
+    };
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  // JSON fayldan test import qilish
+  importTestFromJSON(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      let questions = [];
+      // Zakovat format
+      if (data.test && data.test.questions) {
+        questions = data.test.questions.map(q => ({
+          id: security.generateId(),
+          text: q.text,
+          type: 'multiple',
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          points: q.points || 10,
+          explanation: q.explanation || ''
+        }));
+        const test = this.createTest({
+          title: data.test.title,
+          description: data.test.description || '',
+          questions,
+          timer: data.test.timer || 30,
+          maxPlayers: data.test.maxPlayers || 50,
+          shuffle: data.test.shuffle ?? true,
+          isPublic: data.test.isPublic ?? true
+        });
+        return test;
+      }
+      // Oddiy format (questions array to'g'ridan-to'g'ri)
+      if (Array.isArray(data)) {
+        questions = data.map(q => ({
+          id: security.generateId(),
+          text: q.text || q.question || '',
+          type: 'multiple',
+          options: q.options || q.answers || [],
+          correctAnswer: q.correctAnswer ?? q.correct ?? 0,
+          points: q.points || 10,
+          explanation: q.explanation || ''
+        }));
+        if (questions.length === 0) return null;
+        const test = this.createTest({
+          title: 'Import qilingan test',
+          description: `${questions.length} ta savol`,
+          questions,
+          timer: 30,
+          maxPlayers: 50,
+          shuffle: true,
+          isPublic: true
+        });
+        return test;
+      }
+      return null;
+    } catch (e) { console.error('Import error:', e); return null; }
+  }
+
+  // Test kutubxonasi — barcha testlar (shu jumladan boshqalardan kelgan)
+  getAllAvailableTests() {
+    return this.tests.filter(t => t.status === 'waiting' || t.status === 'active');
+  }
+
+  // Testga odam qo'shish
+  addPlayerToTest(testId, playerInfo) {
+    const test = this.getTest(testId);
+    if (!test) return false;
+    if (!test.players) test.players = [];
+    if (test.players.find(p => p.id === playerInfo.id)) return true; // allaqachon qo'shilgan
+    if (test.players.length >= (test.maxPlayers || 50)) return false;
+    test.players.push({ ...playerInfo, joinedAt: Date.now() });
+    storage.set('tests', this.tests);
+    return true;
+  }
+
+  // Taklif havolasini generatsiya qilish
+  generateShareLink(testId) {
+    const encoded = this.encodeTestForShare(testId);
+    if (!encoded) return null;
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}#test/${encoded}`;
+  }
+
   // WebRTC Multiplayer
   createRoom(testId, onPeerConnect, onPeerData) {
     const test = this.getTest(testId);
@@ -1051,7 +1229,15 @@ function navigate(page, params = {}) {
 }
 
 window.addEventListener('hashchange', () => {
-  const hash = window.location.hash.slice(1) || 'home';
+  const hash = window.location.hash.slice(1) || 'dashboard';
+  // URL da test/ kodi bo'lsa, maxsus ishlov berish
+  if (hash.startsWith('test/')) {
+    const encoded = hash.slice(5);
+    currentPage = 'test-link';
+    pageParams = { encoded };
+    renderApp();
+    return;
+  }
   if (hash !== currentPage) { currentPage = hash; renderApp(); }
 });
 
@@ -1086,6 +1272,7 @@ function renderNavbar() {
       <button class="nav-link ${currentPage==='dashboard'?'active':''}" onclick="navigate('dashboard')">Dashboard</button>
       <button class="nav-link ${currentPage==='create-test'?'active':''}" onclick="navigate('create-test')">Test tuzish</button>
       <button class="nav-link ${currentPage==='join-test'?'active':''}" onclick="navigate('join-test')">Test topshirish</button>
+      <button class="nav-link ${currentPage==='test-library'?'active':''}" onclick="navigate('test-library')">📚 Kutubxona</button>
       <button class="nav-link ${currentPage==='leaderboard'?'active':''}" onclick="navigate('leaderboard')">Reyting</button>
       <button class="nav-link ${currentPage==='groups'?'active':''}" onclick="navigate('groups')">Guruhlar</button>
       <button class="nav-link ${currentPage==='achievements'?'active':''}" onclick="navigate('achievements')">Yutuqlar</button>
@@ -1135,6 +1322,8 @@ function renderPage() {
     case 'profile': return auth.isLoggedIn() ? renderProfile() : (navigate('login'), '');
     case 'admin': return auth.isStaff() ? renderAdmin() : (navigate('dashboard'), '');
     case 'stats': return auth.isLoggedIn() ? renderStats() : (navigate('login'), '');
+    case 'test-library': return auth.isLoggedIn() ? renderTestLibrary() : (navigate('login'), '');
+    case 'test-link': return auth.isLoggedIn() ? renderTestFromLink() : (navigate('login'), '');
     default: return auth.isLoggedIn() ? renderDashboard() : renderLogin();
   }
 }
@@ -1589,14 +1778,45 @@ function renderTestRoom() {
   const test = testEngine.getTest(pageParams.testId);
   if (!test) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Test topilmadi</div></div>';
 
+  const shareLink = testEngine.generateShareLink(test.id);
+  const isCreator = test.createdBy === auth.currentUser?.id;
+
   return `<div class="animate-fade" style="max-width:700px;margin:0 auto">
     <div class="card" style="text-align:center;margin-bottom:20px">
       <h2>${security.sanitizeHTML(test.title)}</h2>
       <p style="color:var(--text3);margin:8px 0">${security.sanitizeHTML(test.description || '')}</p>
-      <div class="room-code-display">${test.roomCode}</div>
-      <p style="color:var(--text3);font-size:.85rem">Ushbu kodni do'stlaringizga yuboring</p>
+      <div style="margin:16px 0">
+        <span class="badge ${test.status==='waiting'?'badge-success':test.status==='active'?'badge-primary':'badge-secondary'}" style="font-size:1rem;padding:8px 16px">${test.status==='waiting'?'⏳ Kutish rejimida':test.status==='active'?'▶️ Aktiv':'✅ Tugagan'}</span>
+      </div>
     </div>
 
+    <!-- XONA KODI VA TAKLIF QILISH -->
+    <div class="card" style="margin-bottom:20px;border:2px solid var(--accent);background:rgba(245,158,11,.05)">
+      <h3 style="text-align:center;margin-bottom:16px">🔗 Do'stlarni taklif qilish</h3>
+      <div class="room-code-display" style="cursor:pointer" onclick="copyToClipboard('${test.roomCode}')" title="Bosib nusxalash">
+        ${test.roomCode}
+      </div>
+      <p style="color:var(--text3);font-size:.85rem;text-align:center;margin-bottom:16px">📝 Ushbu kodni do'stlaringizga yuboring — ular "Test topshirish" dan kodni kiritib qo'shiladi</p>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="copyToClipboard('${test.roomCode}')">📋 Xona kodini nusxalash</button>
+        <button class="btn btn-success" onclick="copyShareLink('${test.id}')">🔗 Havolani nusxalash</button>
+      </div>
+      
+      ${shareLink?`<div style="background:var(--bg);padding:12px;border-radius:8px;margin-top:8px">
+        <p style="color:var(--text3);font-size:.8rem;margin-bottom:4px">Taklif havolasi (yaratuvchi chiqib ketsa ham ishlaydi):</p>
+        <div style="display:flex;gap:8px;align-items:center">
+          <code style="flex:1;font-size:.75rem;color:var(--primary2);word-break:break-all;overflow:hidden;text-overflow:ellipsis">${security.sanitizeHTML(shareLink)}</code>
+        </div>
+      </div>`:''}
+      
+      <!-- QR kod (oddiy matn ko'rinishida) -->
+      <div style="margin-top:16px;text-align:center">
+        <button class="btn btn-secondary btn-sm" onclick="showShareModal('${test.id}')">📱 QR kod va boshqa ulashish usullari</button>
+      </div>
+    </div>
+
+    <!-- Test ma'lumotlari -->
     <div class="card" style="margin-bottom:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <h3>📋 Test ma'lumotlari</h3>
@@ -1607,12 +1827,39 @@ function renderTestRoom() {
         <div>👥 Maks: <strong>${test.maxPlayers}</strong></div>
         <div>🔀 Aralashtirish: <strong>${test.shuffle?'Ha':'Yo\'q'}</strong></div>
         <div>📊 Natijalar: <strong>${test.settings?.showResults?'Ko\'rsatish':'Yashirish'}</strong></div>
+        <div>👤 Yaratuvchi: <strong>${security.sanitizeHTML(test.createdByName||'Noma\'lum')}</strong></div>
+        <div>📅 Sana: <strong>${new Date(test.createdAt).toLocaleDateString('uz-UZ')}</strong></div>
       </div>
     </div>
 
-    <div style="display:flex;gap:12px;justify-content:center">
+    <!-- Qo'shilgan o'yinchilar -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3>👥 Qo'shilgan o'yinchilar (${(test.players||[]).length})</h3>
+        <button class="btn btn-sm btn-primary" onclick="addPlayerManual('${test.id}')">+ Odam qo'shish</button>
+      </div>
+      ${(test.players&&test.players.length)?`<div class="players-list">
+        ${test.players.map(p=>`<div class="player-card">
+          <div class="player-avatar">${(p.name||'?')[0].toUpperCase()}</div>
+          <div style="flex:1"><div class="player-name">${security.sanitizeHTML(p.name||'Noma\'lum')}</div><div style="font-size:.75rem;color:var(--text3)">${p.role||'O\'quvchi'} • ${new Date(p.joinedAt).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'})}</div></div>
+        </div>`).join('')}
+      </div>`:'<p style="color:var(--text3);text-align:center;padding:16px">Hali hech kim qo\'shilmadi. Xona kodini yuboring yoki odam qo\'shing!</p>'}
+    </div>
+
+    <!-- Eksport/Import -->
+    <div class="card" style="margin-bottom:20px">
+      <h3 style="margin-bottom:12px">💾 Testni saqlash va ulashish</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="exportTest('${test.id}')">📥 JSON yuklash</button>
+        <button class="btn btn-secondary btn-sm" onclick="showImportModal()">📤 JSON import</button>
+        <button class="btn btn-secondary btn-sm" onclick="duplicateTest('${test.id}')">📋 Nusxa olish</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn btn-primary btn-lg" onclick="startActiveTest('${test.id}')">🚀 Testni boshlash</button>
-      <button class="btn btn-secondary btn-lg" onclick="testEngine.leaveRoom();navigate('dashboard')">Chiqish</button>
+      ${isCreator?`<button class="btn btn-danger btn-lg" onclick="if(confirm('Testni o\'chirishni xohlaysizmi?')){testEngine.deleteTest('${test.id}');navigate('dashboard')}">🗑️ O'chirish</button>`:''}
+      <button class="btn btn-secondary btn-lg" onclick="testEngine.leaveRoom();navigate('dashboard')">← Ortga</button>
     </div>
   </div>`;
 }
@@ -2142,7 +2389,279 @@ function renderStats() {
   </div>`;
 }
 
-// ==================== MODALS ====================
+// ==================== TEST LIBRARY PAGE ====================
+function renderTestLibrary() {
+  const allTests = testEngine.getAllAvailableTests();
+  const myTests = testEngine.getUserTests(auth.currentUser?.id);
+  const otherTests = allTests.filter(t => t.createdBy !== auth.currentUser?.id);
+
+  return `<div class="animate-fade" style="max-width:900px;margin:0 auto">
+    <h2 style="margin-bottom:24px">📚 Test kutubxonasi</h2>
+    
+    <div class="tabs" id="libTabs">
+      <button class="tab active" onclick="switchLibTab('all')">Barcha testlar (${allTests.length})</button>
+      <button class="tab" onclick="switchLibTab('my')">Mening testlarim (${myTests.length})</button>
+      <button class="tab" onclick="switchLibTab('other')">Boshqa testlar (${otherTests.length})</button>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="navigate('create-test')">✏️ Yangi test</button>
+      <button class="btn btn-secondary" onclick="showImportModal()">📤 JSON import</button>
+      <input class="form-input" id="libSearch" placeholder="🔍 Qidirish..." style="max-width:250px" oninput="filterLibrary()">
+    </div>
+
+    <div id="libAll">
+      ${allTests.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+        ${allTests.map(t=>renderTestCard(t)).join('')}
+      </div>`:'<div class="empty-state"><div class="empty-state-icon">📚</div><div class="empty-state-title">Testlar yo\'q</div><div class="empty-state-text">Yangi test tuzing yoki import qiling</div></div>'}
+    </div>
+    <div id="libMy" style="display:none">
+      ${myTests.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+        ${myTests.map(t=>renderTestCard(t)).join('')}
+      </div>`:'<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-title">Sizda test yo\'q</div></div>'}
+    </div>
+    <div id="libOther" style="display:none">
+      ${otherTests.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+        ${otherTests.map(t=>renderTestCard(t)).join('')}
+      </div>`:'<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Boshqa testlar yo\'q</div><div class="empty-state-text">Havola orqali test qo\'shing yoki xona kodiga qo\'shiling</div></div>'}
+    </div>
+  </div>`;
+}
+
+function renderTestCard(t) {
+  const isCreator = t.createdBy === auth.currentUser?.id;
+  return `<div class="card" style="cursor:pointer" onclick="navigate('test-room',{testId:'${t.id}'})">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <h4 style="font-size:1rem;flex:1">${security.sanitizeHTML(t.title)}</h4>
+      <span class="badge ${t.status==='waiting'?'badge-success':t.status==='active'?'badge-primary':'badge-secondary'}">${t.status}</span>
+    </div>
+    <p style="color:var(--text3);font-size:.85rem;margin-bottom:8px">${security.sanitizeHTML(t.description||'')}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--text4)">
+      <span>📝 ${t.questions.length} savol</span>
+      <span>⏱️ ${t.timer}s</span>
+      <span>👤 ${security.sanitizeHTML(t.createdByName||'Noma\'lum')}</span>
+      <span>👥 ${(t.players||[]).length}</span>
+      ${t.source==='shared_link'?'<span class="badge badge-accent">🔗 Havola</span>':''}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();navigate('test-room',{testId:'${t.id}'})"> Ochish</button>
+      <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();copyShareLink('${t.id}')">🔗</button>
+      <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();exportTest('${t.id}')">📥</button>
+      ${isCreator?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();if(confirm('O\'chirish?')){testEngine.deleteTest('${t.id}');renderApp()}">🗑️</button>`:''}
+    </div>
+  </div>`;
+}
+
+function switchLibTab(tab) {
+  ['all','my','other'].forEach(t => {
+    const el = document.getElementById('lib' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('#libTabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab==='all'&&i===0)||(tab==='my'&&i===1)||(tab==='other'&&i===2));
+  });
+}
+
+function filterLibrary() {
+  const query = (document.getElementById('libSearch')?.value||'').toLowerCase();
+  document.querySelectorAll('#libAll .card, #libMy .card, #libOther .card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+
+// ==================== TEST FROM LINK PAGE ====================
+function renderTestFromLink() {
+  const encoded = pageParams.encoded;
+  return `<div class="animate-fade" style="max-width:600px;margin:0 auto">
+    <div class="card" style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:16px">🔗</div>
+      <h2 style="margin-bottom:12px">Taklif qilingan test</h2>
+      <p style="color:var(--text3);margin-bottom:24px">Sizga test havolasi yuborildi. "Qo'shish" tugmasini bosing va test sizning kutubxonangizga saqlanadi.</p>
+      <button class="btn btn-primary btn-lg btn-block" onclick="loadSharedTest()">📥 Testni qo'shish</button>
+      <button class="btn btn-secondary btn-block" style="margin-top:8px" onclick="navigate('dashboard')">Bosh sahifaga qaytish</button>
+    </div>
+  </div>`;
+}
+
+function loadSharedTest() {
+  const encoded = pageParams.encoded;
+  if (!encoded) return showToast('Havola noto\'g\'ri', 'error');
+  const test = testEngine.decodeTestFromShare(encoded);
+  if (test) {
+    showToast('Test muvaffaqiyatli qo\'shildi!', 'success');
+    // O'zimizni ham qo'shamiz
+    testEngine.addPlayerToTest(test.id, { id: auth.currentUser?.id, name: auth.currentUser?.username, role: 'player' });
+    navigate('test-room', { testId: test.id });
+  } else {
+    showToast('Havola noto\'g\'ri yoki buzilgan', 'error');
+  }
+}
+
+// ==================== SHARE & EXPORT FUNCTIONS ====================
+function copyShareLink(testId) {
+  const link = testEngine.generateShareLink(testId);
+  if (!link) return showToast('Havola yaratilmadi', 'error');
+  copyToClipboard(link);
+  showToast('Taklif havolasi nusxalandi! Do\'stlaringizga yuboring — siz chiqib ketsangiz ham test ishlaydi!', 'success');
+}
+
+function showShareModal(testId) {
+  const test = testEngine.getTest(testId);
+  if (!test) return;
+  const link = testEngine.generateShareLink(testId);
+  showModal('📱 Ulashish va taklif qilish', `
+    <div style="text-align:center;margin-bottom:20px">
+      <h3>${security.sanitizeHTML(test.title)}</h3>
+      <p style="color:var(--text3)">${test.questions.length} savol • ${test.timer}s</p>
+    </div>
+    
+    <div style="margin-bottom:20px">
+      <h4 style="margin-bottom:8px">📋 Usul 1: Xona kodi</h4>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" value="${test.roomCode}" readonly style="text-align:center;font-size:1.3rem;letter-spacing:6px;font-weight:800">
+        <button class="btn btn-primary" onclick="copyToClipboard('${test.roomCode}')">Nusxa</button>
+      </div>
+      <p style="color:var(--text4);font-size:.8rem;margin-top:4px">Do'stlar "Test topshirish" sahifasida ushbu kodni kiritsa, sizga qo'shiladi</p>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <h4 style="margin-bottom:8px">🔗 Usul 2: Taklif havolasi</h4>
+      <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:8px">
+        <code style="font-size:.8rem;color:var(--primary2);word-break:break-all">${security.sanitizeHTML(link||'')}</code>
+      </div>
+      <button class="btn btn-success btn-block" onclick="copyToClipboard('${link||''}')">📋 Havolani nusxalash</button>
+      <p style="color:var(--text4);font-size:.8rem;margin-top:4px">✅ Yaratuvchi chiqib ketsa ham test ishlaydi — test havolaga shifrlanadi</p>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <h4 style="margin-bottom:8px">📱 Usul 3: Telegram/WhatsApp</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-secondary" onclick="shareViaTelegram('${testId}')">📤 Telegram</button>
+        <button class="btn btn-secondary" onclick="shareViaWhatsApp('${testId}')">📤 WhatsApp</button>
+      </div>
+    </div>
+
+    <div>
+      <h4 style="margin-bottom:8px">📥 Usul 4: JSON fayl</h4>
+      <button class="btn btn-secondary btn-block" onclick="exportTest('${testId}')">📥 Test faylini yuklash</button>
+      <p style="color:var(--text4);font-size:.8rem;margin-top:4px">Faylni do'stlarga yuboring, ular "Import" orqali yuklashdi</p>
+    </div>
+  `);
+}
+
+function shareViaTelegram(testId) {
+  const link = testEngine.generateShareLink(testId);
+  const test = testEngine.getTest(testId);
+  if (!link || !test) return;
+  const text = encodeURIComponent(`🎓 Zakovat test: ${test.title}\n📝 ${test.questions.length} savol\n🔗 Qo'shish: ${link}`);
+  window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
+}
+
+function shareViaWhatsApp(testId) {
+  const link = testEngine.generateShareLink(testId);
+  const test = testEngine.getTest(testId);
+  if (!link || !test) return;
+  const text = encodeURIComponent(`🎓 Zakovat test: ${test.title}\n📝 ${test.questions.length} savol\n🔗 Qo'shish: ${link}`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+function exportTest(testId) {
+  const json = testEngine.exportTestAsJSON(testId);
+  if (!json) return showToast('Eksportda xato', 'error');
+  const test = testEngine.getTest(testId);
+  const filename = (test?.title || 'test').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Test fayli yuklandi: ' + filename, 'success');
+}
+
+function showImportModal() {
+  showModal('📤 Test import qilish', `
+    <div style="margin-bottom:20px">
+      <h4 style="margin-bottom:8px">Fayldan import</h4>
+      <input type="file" id="importFile" accept=".json" class="form-input" style="padding:12px">
+    </div>
+    <div style="margin-bottom:20px">
+      <h4 style="margin-bottom:8px">Yoki JSON matnini qo'yish</h4>
+      <textarea class="form-input" id="importJSON" placeholder='JSON matnini bu yerga qo\'ying...' style="min-height:150px;font-size:.85rem"></textarea>
+    </div>
+  `, `<button class="btn btn-primary" onclick="handleImportTest()">Import qilish</button>`);
+}
+
+function handleImportTest() {
+  // Fayldan o'qish
+  const fileInput = document.getElementById('importFile');
+  const jsonText = document.getElementById('importJSON')?.value?.trim();
+  
+  if (fileInput?.files?.length > 0) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const test = testEngine.importTestFromJSON(e.target.result);
+      if (test) {
+        document.querySelector('.modal-overlay')?.remove();
+        showToast('Test muvaffaqiyatli import qilindi!', 'success');
+        navigate('test-room', { testId: test.id });
+      } else {
+        showToast('Import qilishda xato — fayl formati noto\'g\'ri', 'error');
+      }
+    };
+    reader.readAsText(fileInput.files[0]);
+  } else if (jsonText) {
+    const test = testEngine.importTestFromJSON(jsonText);
+    if (test) {
+      document.querySelector('.modal-overlay')?.remove();
+      showToast('Test muvaffaqiyatli import qilindi!', 'success');
+      navigate('test-room', { testId: test.id });
+    } else {
+      showToast('Import qilishda xato — JSON formati noto\'g\'ri', 'error');
+    }
+  } else {
+    showToast('Fayl yoki JSON matnini kiriting', 'error');
+  }
+}
+
+function duplicateTest(testId) {
+  const test = testEngine.getTest(testId);
+  if (!test) return;
+  const newTest = testEngine.createTest({
+    title: test.title + ' (nusxa)',
+    description: test.description,
+    questions: test.questions.map(q => ({...q, id: security.generateId()})),
+    timer: test.timer,
+    maxPlayers: test.maxPlayers,
+    shuffle: test.shuffle,
+    isPublic: test.settings?.isPublic ?? true
+  });
+  showToast('Test nusxalandi!', 'success');
+  navigate('test-room', { testId: newTest.id });
+}
+
+function addPlayerManual(testId) {
+  showModal('👤 Odam qo\'shish', `
+    <p style="color:var(--text3);margin-bottom:16px">Testga qo'shmoqchi bo'lgan odamning ismini kiriting</p>
+    <div class="form-group">
+      <label class="form-label">Ism</label>
+      <input class="form-input" id="addPlayerName" placeholder="Foydalanuvchi ismi...">
+    </div>
+  `, `<button class="btn btn-primary" onclick="handleAddPlayer('${testId}')">Qo'shish</button>`);
+}
+
+function handleAddPlayer(testId) {
+  const name = document.getElementById('addPlayerName')?.value?.trim();
+  if (!name) return showToast('Ismni kiriting', 'error');
+  const added = testEngine.addPlayerToTest(testId, { id: security.generateId(), name, role: 'player' });
+  if (added) {
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(name + ' testga qo\'shildi!', 'success');
+    renderApp();
+  } else {
+    showToast('Qo\'shishda xato (test to\'la bo\'lishi mumkin)', 'error');
+  }
+}
 function showModal(title, content, footer = '') {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -2312,7 +2831,15 @@ notifManager.requestPermission();
 
 window.addEventListener('load', () => {
   const hash = window.location.hash.slice(1);
-  if (hash) currentPage = hash;
+  if (hash) {
+    // URL da test/ bo'lsa, avtomatik test-link sahifasiga o'tish
+    if (hash.startsWith('test/')) {
+      currentPage = 'test-link';
+      pageParams = { encoded: hash.slice(5) };
+    } else {
+      currentPage = hash;
+    }
+  }
   renderApp();
 });
 </script>
