@@ -1245,14 +1245,29 @@ window.addEventListener('hashchange', () => {
 
 // ==================== RENDER ENGINE ====================
 function renderApp() {
-  const app = document.getElementById('app');
-  // Kirmagan odamni majburan login/register'ga yo'naltirish
-  if (!auth.isLoggedIn() && !['login','register'].includes(currentPage)) {
-    currentPage = 'login';
+  try {
+    const app = document.getElementById('app');
+    if (!app) { console.error('#app elementi topilmadi!'); return; }
+    // Kirmagan odamni majburan login/register'ga yo'naltirish
+    if (!auth.isLoggedIn() && !['login','register'].includes(currentPage)) {
+      currentPage = 'login';
+    }
+    const navHTML = renderNavbar();
+    const pageHTML = renderPage();
+    app.innerHTML = navHTML + `<div class="main">${pageHTML}</div>`;
+    attachEvents();
+    if (auth.isLoggedIn()) achievementManager.check();
+  } catch(e) {
+    console.error('renderApp xatosi:', e);
+    const app = document.getElementById('app');
+    if (app) {
+      app.innerHTML = `<div style="padding:40px;text-align:center;color:#ef4444">
+        <h2>Sahifani yuklashda xato</h2>
+        <p style="color:#cbd5e1;margin:16px 0">${e.message}</p>
+        <button onclick="location.reload()" style="padding:12px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:1rem">Sahifani yangilash</button>
+      </div>`;
+    }
   }
-  app.innerHTML = renderNavbar() + `<div class="main">${renderPage()}</div>`;
-  attachEvents();
-  if (auth.isLoggedIn()) achievementManager.check();
 }
 
 function renderNavbar() {
@@ -1696,7 +1711,16 @@ To'g'ri: C</pre>
           <label class="form-label">📝 Savollar matni</label>
           <textarea class="form-input" id="bulkQuestionsText" placeholder="Yuqoridagi formatda savollarni kiriting..." style="min-height:250px;font-size:.9rem"></textarea>
         </div>
-        <button class="btn btn-primary btn-lg btn-block" onclick="handleBulkCreate()">📦 Testni yaratish</button>
+        <div id="bulkPreview" style="display:none;margin-bottom:16px">
+          <div class="card" style="background:var(--bg);border-color:var(--success)">
+            <h4 style="color:var(--success);margin-bottom:8px">✅ Topilgan savollar: <span id="bulkCount">0</span></h4>
+            <div id="bulkPreviewList" style="max-height:200px;overflow-y:auto;font-size:.85rem"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn btn-secondary" style="flex:1" onclick="previewBulkQuestions()">🔍 Tekshirish</button>
+          <button class="btn btn-primary btn-lg" style="flex:2" onclick="handleBulkCreate()">📦 Testni yaratish</button>
+        </div>
       </div>
     </div>
 
@@ -1734,18 +1758,19 @@ function resetQuestionCount() {
   questionCount = 0;
 }
 function addQuestion() {
-  questionCount++;
-  const id = questionCount;
-  const container = document.getElementById('questionsList');
-  if (!container) { questionCount--; return; }
-  const div = document.createElement('div');
-  div.className = 'card animate-scale';
-  div.id = `q-${id}`;
-  div.style.marginBottom = '16px';
-  div.innerHTML = `
+  try {
+    questionCount++;
+    const id = questionCount;
+    const container = document.getElementById('questionsList');
+    if (!container) { questionCount--; console.error('questionsList topilmadi!'); return; }
+    const div = document.createElement('div');
+    div.className = 'card animate-scale';
+    div.id = `q-${id}`;
+    div.style.marginBottom = '16px';
+    div.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <strong>${id}-savol</strong>
-      <button class="btn btn-sm btn-danger" onclick="document.getElementById('q-${id}').remove()">🗑️</button>
+      <button class="btn btn-sm btn-danger" onclick="this.closest('.card').remove()">🗑️</button>
     </div>
     <div class="form-group">
       <input class="form-input q-text" placeholder="Savol matnini kiriting..." data-q="${id}">
@@ -1762,7 +1787,11 @@ function addQuestion() {
         <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
       </select>
     </div>`;
-  container.appendChild(div);
+    container.appendChild(div);
+  } catch(e) {
+    console.error('addQuestion xatosi:', e);
+    questionCount--;
+  }
 }
 
 function switchCreateTab(tab) {
@@ -1831,64 +1860,110 @@ function parseBulkQuestions(text) {
   return questions;
 }
 
-function handleBulkCreate() {
-  const title = document.getElementById('bulkTestTitle')?.value?.trim();
-  if (!title) return showToast('Test nomini kiriting', 'error');
-  const desc = document.getElementById('bulkTestDesc')?.value?.trim() || '';
-  const timer = parseInt(document.getElementById('bulkTimer')?.value) || 30;
-  const maxPlayers = parseInt(document.getElementById('bulkMaxPlayers')?.value) || 50;
-  const shuffle = document.getElementById('bulkShuffle')?.checked ?? true;
-  const isPublic = document.getElementById('bulkPublic')?.checked ?? false;
-  const text = document.getElementById('bulkQuestionsText')?.value || '';
-
-  const questions = parseBulkQuestions(text);
-  if (questions.length === 0) return showToast('Savollar topilmadi. Formatni tekshiring — har bir savol alohida bo\'lim bo\'lishi va A) B) C) D) variantlar bo\'lishi kerak', 'error');
-
-  const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
-  // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
-  if (pageParams.groupId) {
-    groupManager.addTest(pageParams.groupId, test.id);
-    showToast('Test guruhga ham qo\'shildi!', 'success');
+function previewBulkQuestions() {
+  try {
+    const text = document.getElementById('bulkQuestionsText')?.value || '';
+    if (!text.trim()) return showToast('Avval savollar matnini kiriting', 'warning');
+    const questions = parseBulkQuestions(text);
+    const preview = document.getElementById('bulkPreview');
+    const countEl = document.getElementById('bulkCount');
+    const listEl = document.getElementById('bulkPreviewList');
+    if (!preview || !countEl || !listEl) return;
+    countEl.textContent = questions.length;
+    if (questions.length > 0) {
+      listEl.innerHTML = questions.map((q, i) => `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <strong>${i+1}. ${q.text}</strong><br>
+        <span style="color:var(--text3)">${q.options.map((o,j) => String.fromCharCode(65+j) + ') ' + o).join(' | ')}</span><br>
+        <span style="color:var(--success)">To'g'ri: ${String.fromCharCode(65 + q.correctAnswer)}</span>
+      </div>`).join('');
+    } else {
+      listEl.innerHTML = `<div style="color:var(--danger);padding:12px">
+        ❌ Savollar topilmadi! Formatni tekshiring:<br>
+        • Har bir savol alohida bo'lim bo'lishi kerak<br>
+        • A) B) C) D) variantlar bo'lishi kerak<br>
+        • To'g'ri: A kabi to'g'ri javob ko'rsatilishi kerak<br>
+        • Savollar orasida bo'sh qator bo'lishi kerak
+      </div>`;
+    }
+    preview.style.display = 'block';
+  } catch(e) {
+    console.error('previewBulkQuestions xatosi:', e);
+    showToast(`Tekshirishda xato: ${e.message}`, 'error');
   }
-  showToast(`${questions.length} ta savol bilan test yaratildi!`, 'success');
-  navigate('test-room', { testId: test.id });
+}
+
+function handleBulkCreate() {
+  try {
+    const title = document.getElementById('bulkTestTitle')?.value?.trim();
+    if (!title) return showToast('Test nomini kiriting', 'error');
+    const desc = document.getElementById('bulkTestDesc')?.value?.trim() || '';
+    const timer = parseInt(document.getElementById('bulkTimer')?.value) || 30;
+    const maxPlayers = parseInt(document.getElementById('bulkMaxPlayers')?.value) || 50;
+    const shuffle = document.getElementById('bulkShuffle')?.checked ?? true;
+    const isPublic = document.getElementById('bulkPublic')?.checked ?? false;
+    const text = document.getElementById('bulkQuestionsText')?.value || '';
+
+    if (!text.trim()) return showToast('Savollar matnini kiriting', 'error');
+
+    const questions = parseBulkQuestions(text);
+    if (questions.length === 0) return showToast(`Savollar topilmadi (${text.length} belgi kiritildi). Formatni tekshiring: har bir savol alohida bo'lim, A) B) C) D) variantlar va To'g'ri: A kerak`, 'error');
+
+    const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+    if (!test) return showToast('Test yaratishda xato yuz berdi', 'error');
+    // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
+    if (pageParams.groupId) {
+      groupManager.addTest(pageParams.groupId, test.id);
+      showToast(`Test guruhga ham qo'shildi!`, 'success');
+    }
+    showToast(`${questions.length} ta savol bilan test yaratildi!`, 'success');
+    navigate('test-room', { testId: test.id });
+  } catch(e) {
+    console.error('handleBulkCreate xatosi:', e);
+    showToast(`Test yaratishda xato: ${e.message}`, 'error');
+  }
 }
 
 function handleCreateTest() {
-  const title = document.getElementById('testTitle')?.value?.trim();
-  if (!title) return showToast('Test nomini kiriting', 'error');
-  const desc = document.getElementById('testDesc')?.value?.trim() || '';
-  const timer = parseInt(document.getElementById('testTimer')?.value) || 30;
-  const maxPlayers = parseInt(document.getElementById('testMaxPlayers')?.value) || 50;
-  const shuffle = document.getElementById('testShuffle')?.checked ?? true;
-  const isPublic = document.getElementById('testPublic')?.checked ?? false;
+  try {
+    const title = document.getElementById('testTitle')?.value?.trim();
+    if (!title) return showToast('Test nomini kiriting', 'error');
+    const desc = document.getElementById('testDesc')?.value?.trim() || '';
+    const timer = parseInt(document.getElementById('testTimer')?.value) || 30;
+    const maxPlayers = parseInt(document.getElementById('testMaxPlayers')?.value) || 50;
+    const shuffle = document.getElementById('testShuffle')?.checked ?? true;
+    const isPublic = document.getElementById('testPublic')?.checked ?? false;
 
-  const qTexts = document.querySelectorAll('.q-text');
-  const questions = [];
-  let valid = true;
-  qTexts.forEach(el => {
-    const qId = el.dataset.q;
-    const text = el.value.trim();
-    if (!text) { valid = false; return; }
-    const opts = [];
-    document.querySelectorAll(`.q-opt[data-q="${qId}"]`).forEach(opt => {
-      if (opt.value.trim()) opts.push(opt.value.trim());
+    const qTexts = document.querySelectorAll('.q-text');
+    const questions = [];
+    let valid = true;
+    qTexts.forEach(el => {
+      const qId = el.dataset.q;
+      const text = el.value.trim();
+      if (!text) { valid = false; return; }
+      const opts = [];
+      document.querySelectorAll(`.q-opt[data-q="${qId}"]`).forEach(opt => {
+        if (opt.value.trim()) opts.push(opt.value.trim());
+      });
+      if (opts.length < 2) { valid = false; return; }
+      const correct = parseInt(document.querySelector(`.q-correct[data-q="${qId}"]`)?.value) || 0;
+      questions.push({ id: security.generateId(), text, type: 'multiple', options: opts, correctAnswer: Math.min(correct, opts.length-1), points: 10, explanation: '' });
     });
-    if (opts.length < 2) { valid = false; return; }
-    const correct = parseInt(document.querySelector(`.q-correct[data-q="${qId}"]`)?.value) || 0;
-    questions.push({ id: security.generateId(), text, type: 'multiple', options: opts, correctAnswer: Math.min(correct, opts.length-1), points: 10, explanation: '' });
-  });
 
-  if (!valid || questions.length === 0) return showToast('Barcha savollarni to\'ldiring (kamida 2 variant)', 'error');
+    if (!valid || questions.length === 0) return showToast(`Barcha savollarni to'ldiring (kamida 2 variant). Hozir ${qTexts.length} ta savol bor`, 'error');
 
-  const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
-  // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
-  if (pageParams.groupId) {
-    groupManager.addTest(pageParams.groupId, test.id);
-    showToast('Test guruhga ham qo\'shildi!', 'success');
+    const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+    if (!test) return showToast('Test yaratishda xato yuz berdi', 'error');
+    // Agar guruhdan kelgan bo'lsa, testni guruhga ham qo'shamiz
+    if (pageParams.groupId) {
+      groupManager.addTest(pageParams.groupId, test.id);
+      showToast(`Test guruhga ham qo'shildi!`, 'success');
+    }
+    showToast('Test muvaffaqiyatli yaratildi!', 'success');
+    navigate('test-room', { testId: test.id });
+  } catch(e) {
+    console.error('handleCreateTest xatosi:', e);
+    showToast(`Test yaratishda xato: ${e.message}`, 'error');
   }
-  showToast('Test muvaffaqiyatli yaratildi!', 'success');
-  navigate('test-room', { testId: test.id });
 }
 
 function handleAIGenerate() {
@@ -2217,6 +2292,7 @@ function renderGroupDetail() {
   if (!group) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Guruh topilmadi</div></div>';
 
   const isOwner = group.createdBy === auth.currentUser?.id;
+  const canManage = isOwner || auth.isAdmin() || auth.isTeacher();
   const groupTests = group.tests.map(tid => testEngine.getTest(tid)).filter(Boolean);
   const myTests = testEngine.getUserTests(auth.currentUser?.id);
   const testsNotInGroup = myTests.filter(t => !group.tests.includes(t.id));
@@ -2233,7 +2309,7 @@ function renderGroupDetail() {
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${group.inviteCode}');showToast('Taklif kodi nusxalandi: ${group.inviteCode}','success')">📋 Taklif kodi: ${group.inviteCode}</button>
-          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ A'zo qo'shish</button>`:''}
+          ${canManage?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ A'zo qo'shish</button>`:''}
           <button class="btn btn-sm btn-danger" onclick="groupManager.leave('${group.id}');navigate('groups')">Chiqish</button>
         </div>
       </div>
@@ -2243,19 +2319,19 @@ function renderGroupDetail() {
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <h3>👥 A'zolar (${group.members.length})</h3>
-          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ Qo'shish</button>`:''}
+          ${canManage?`<button class="btn btn-sm btn-primary" onclick="showAddGroupMemberModal('${group.id}')">+ Qo'shish</button>`:''}
         </div>
         ${group.members.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
           <div class="player-avatar">${(m.name||'?')[0].toUpperCase()}</div>
           <div style="flex:1"><strong style="font-size:.9rem">${security.sanitizeHTML(m.name)}</strong><br><span class="badge ${m.role==='owner'?'badge-accent':m.role==='admin'?'badge-primary':'badge-info'}">${m.role}</span></div>
-          ${isOwner&&m.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="removeGroupMember('${group.id}','${m.id}')">✕</button>`:''}
+          ${canManage&&m.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="removeGroupMember('${group.id}','${m.id}')">✕</button>`:''}
         </div>`).join('')}
       </div>
 
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <h3>📋 Testlar (${groupTests.length})</h3>
-          ${isOwner?`<button class="btn btn-sm btn-primary" onclick="showAddTestToGroupModal('${group.id}')">+ Qo'shish</button>`:''}
+          ${canManage?`<button class="btn btn-sm btn-primary" onclick="showAddTestToGroupModal('${group.id}')">+ Qo'shish</button>`:''}
         </div>
         ${groupTests.length?groupTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0">
@@ -2264,7 +2340,7 @@ function renderGroupDetail() {
           </div>
           <div style="display:flex;gap:4px">
             <button class="btn btn-sm btn-primary" onclick="navigate('test-room',{testId:'${t.id}'})">Ochish</button>
-            ${isOwner?`<button class="btn btn-sm btn-danger" onclick="removeTestFromGroup('${group.id}','${t.id}')">✕</button>`:''}
+            ${canManage?`<button class="btn btn-sm btn-danger" onclick="removeTestFromGroup('${group.id}','${t.id}')">✕</button>`:''}
           </div>
         </div>`).join(''):`<div style="text-align:center;padding:20px;color:var(--text3)">
           <div style="font-size:2rem;margin-bottom:8px">📋</div>
@@ -2347,26 +2423,37 @@ function switchAddGroupMemberTab(tab) {
 }
 
 function handleAddGroupMemberByName(groupId) {
-  const name = document.getElementById('addGroupMemberName')?.value?.trim();
-  if (!name) return showToast('Ismni kiriting', 'error');
-  const group = groupManager.getById(groupId);
-  if (!group) return showToast('Guruh topilmadi', 'error');
-  group.members.push({ id: security.generateId(), name, role: 'member', joinedAt: Date.now() });
-  storage.set('groups', groupManager.groups);
-  document.querySelector('.modal-overlay')?.remove();
-  showToast(name + ' guruhga qo\'shildi!', 'success');
-  renderApp();
+  try {
+    const nameInput = document.getElementById('addGroupMemberName');
+    const name = nameInput?.value?.trim();
+    if (!name) return showToast('Ismni kiriting', 'error');
+    const group = groupManager.getById(groupId);
+    if (!group) return showToast(`Guruh topilmadi`, 'error');
+    group.members.push({ id: security.generateId(), name, role: 'member', joinedAt: Date.now() });
+    storage.set('groups', groupManager.groups);
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(name + ` guruhga qo'shildi!`, 'success');
+    renderApp();
+  } catch(e) {
+    console.error('handleAddGroupMemberByName xatosi:', e);
+    showToast(`A'zo qo'shishda xato: ${e.message}`, 'error');
+  }
 }
 
 function handleAddGroupMemberFromList(groupId, userId, username) {
-  const group = groupManager.getById(groupId);
-  if (!group) return showToast('Guruh topilmadi', 'error');
-  if (group.members.find(m => m.id === userId)) return showToast('Bu foydalanuvchi allaqachon guruhda', 'warning');
-  group.members.push({ id: userId, name: username, role: 'member', joinedAt: Date.now() });
-  storage.set('groups', groupManager.groups);
-  document.querySelector('.modal-overlay')?.remove();
-  showToast(username + ' guruhga qo\'shildi!', 'success');
-  renderApp();
+  try {
+    const group = groupManager.getById(groupId);
+    if (!group) return showToast(`Guruh topilmadi`, 'error');
+    if (group.members.find(m => m.id === userId)) return showToast('Bu foydalanuvchi allaqachon guruhda', 'warning');
+    group.members.push({ id: userId, name: username, role: 'member', joinedAt: Date.now() });
+    storage.set('groups', groupManager.groups);
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(username + ` guruhga qo'shildi!`, 'success');
+    renderApp();
+  } catch(e) {
+    console.error('handleAddGroupMemberFromList xatosi:', e);
+    showToast(`A'zo qo'shishda xato: ${e.message}`, 'error');
+  }
 }
 
 function removeGroupMember(groupId, memberId) {
@@ -3025,15 +3112,20 @@ function handleAddRegisteredPlayer(testId, userId, username) {
 }
 
 function handleAddPlayer(testId) {
-  const name = document.getElementById('addPlayerName')?.value?.trim();
-  if (!name) return showToast('Ismni kiriting', 'error');
-  const added = testEngine.addPlayerToTest(testId, { id: security.generateId(), name, role: 'player' });
-  if (added) {
-    document.querySelector('.modal-overlay')?.remove();
-    showToast(name + ' testga qo\'shildi!', 'success');
-    renderApp();
-  } else {
-    showToast('Qo\'shishda xato (test to\'la bo\'lishi mumkin)', 'error');
+  try {
+    const name = document.getElementById('addPlayerName')?.value?.trim();
+    if (!name) return showToast('Ismni kiriting', 'error');
+    const added = testEngine.addPlayerToTest(testId, { id: security.generateId(), name, role: 'player' });
+    if (added) {
+      document.querySelector('.modal-overlay')?.remove();
+      showToast(name + ` testga qo'shildi!`, 'success');
+      renderApp();
+    } else {
+      showToast(`Qo'shishda xato (test to'la bo'lishi mumkin)`, 'error');
+    }
+  } catch(e) {
+    console.error('handleAddPlayer xatosi:', e);
+    showToast(`Odam qo'shishda xato: ${e.message}`, 'error');
   }
 }
 function showModal(title, content, footer = '') {
@@ -3077,15 +3169,20 @@ function showJoinGroupModal() {
 }
 
 function handleJoinGroup() {
-  const code = document.getElementById('joinGroupCode')?.value?.trim().toUpperCase();
-  if (!code) return showToast('Taklif kodini kiriting', 'error');
-  const result = groupManager.join(code);
-  if (result.ok) {
-    document.querySelector('.modal-overlay')?.remove();
-    showToast('Guruhga qo\'shildingiz!', 'success');
-    navigate('group-detail', { groupId: result.group.id });
-  } else {
-    showToast(result.error, 'error');
+  try {
+    const code = document.getElementById('joinGroupCode')?.value?.trim().toUpperCase();
+    if (!code) return showToast('Taklif kodini kiriting', 'error');
+    const result = groupManager.join(code);
+    if (result.ok) {
+      document.querySelector('.modal-overlay')?.remove();
+      showToast(`Guruhga qo'shildingiz!`, 'success');
+      navigate('group-detail', { groupId: result.group.id });
+    } else {
+      showToast(result.error || `Guruh topilmadi`, 'error');
+    }
+  } catch(e) {
+    console.error('handleJoinGroup xatosi:', e);
+    showToast(`Guruhga qo'shishda xato: ${e.message}`, 'error');
   }
 }
 
@@ -3143,14 +3240,18 @@ function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => showToast('Nusxalandi: ' + text, 'success')).catch(() => showToast('Nusxalashda xato', 'error'));
 }
 
+let _attachEventsCalled = false;
 function attachEvents() {
-  // Close notification panel on outside click
-  document.addEventListener('click', e => {
-    const panel = document.getElementById('notifPanel');
-    if (panel?.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.nav-user')) {
-      panel.classList.remove('open');
-    }
-  });
+  // Close notification panel on outside click — faqat bir marta qo'shish
+  if (!_attachEventsCalled) {
+    document.addEventListener('click', e => {
+      const panel = document.getElementById('notifPanel');
+      if (panel?.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.nav-user')) {
+        panel.classList.remove('open');
+      }
+    });
+    _attachEventsCalled = true;
+  }
 
   // Keyboard shortcuts
   document.onkeydown = e => {
@@ -3162,8 +3263,16 @@ function attachEvents() {
 
   // Agar test tuzish sahifasida bo'lsa, savol sonini reset qilish va birinchi savolni avtomatik qo'shish
   if (currentPage === 'create-test') {
-    resetQuestionCount();
-    addQuestion();
+    try {
+      questionCount = 0;
+      const ql = document.getElementById('questionsList');
+      if (ql) {
+        ql.innerHTML = '';
+        addQuestion();
+      }
+    } catch(e) {
+      console.error('Savol qo\'shish xatosi:', e);
+    }
   }
 }
 
