@@ -1463,7 +1463,7 @@ function renderRegister() {
         <p style="color:var(--text4);font-size:.8rem;margin-top:6px">⚠️ Admin yoki o'qituvchi bo'lish uchun maxsus ruxsat kodi kerak. Kod yo'q bo'lsa, o'quvchi sifatida ro'yxatdan o'ting.</p>
       </div>
 
-      ${isFirstChild?'<div class="card" style="margin-bottom:16px;background:rgba(245,158,11,.1);border-color:var(--accent)"><p style="color:var(--accent);font-size:.9rem;text-align:center">🛡️ Siz birinchi foydalanuvchisiz — avtomatik admin bo'lasiz!</p></div>':''}
+      ${isFirstChild?`<div class="card" style="margin-bottom:16px;background:rgba(245,158,11,.1);border-color:var(--accent)"><p style="color:var(--accent);font-size:.9rem;text-align:center">🛡️ Siz birinchi foydalanuvchisiz — avtomatik admin bo'lasiz!</p></div>`:''}
 
       <button class="btn btn-primary btn-block btn-lg" onclick="handleRegister()">Ro'yxatdan o'tish</button>
       <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
