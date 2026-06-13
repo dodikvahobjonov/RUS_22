@@ -1,314 +1,2142 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUNDUZGI RUS GURUHI 22-AR 4-KURS - Amaliy o'zbek tili</title>
-    <style>
-        :root { --primary: #00f2fe; --secondary: #4facfe; --correct: #00ff88; --wrong: #ff4b2b; --bg: #0b0e14; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--bg); color: #fff; }
-        .container { width: 100%; max-width: 850px; padding: 20px; }
-        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); display: none; }
-        .active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        
-        input { width: 100%; padding: 15px; margin: 10px 0 20px; border-radius: 12px; border: 1px solid rgba(255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; }
-        .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
-        .btn-primary { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #000; }
-        .btn-success { background: linear-gradient(90deg, #00ff88, #00c868); color: #000; margin-top: 20px; font-size: 1.1rem; }
-        .btn-danger { background: rgba(255, 75, 43, 0.2); border: 1px solid var(--wrong); color: var(--wrong); margin-top: 15px; }
-        .counter-badge { background: var(--primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-        .table-container { max-height: 300px; overflow-y: auto; margin: 20px 0; border-radius: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: var(--primary); position: sticky; top: 0; background: #1a1d24; }
-        
-        tr:nth-child(1) td:first-child { color: #ffd700; font-weight: bold; font-size: 1.2rem; }
-        tr:nth-child(2) td:first-child { color: #c0c0c0; font-weight: bold; }
-        tr:nth-child(3) td:first-child { color: #cd7f32; font-weight: bold; }
-        .my-row { background: rgba(0, 242, 254, 0.15) !important; border-left: 4px solid var(--primary); }
-        .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
-        .progress-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.4s; }
-        .options { display: grid; gap: 12px; }
-        .opt { background: rgba(255, 255, 255, 0.07); padding: 16px; border-radius: 15px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .opt:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--primary); }
-        .correct { background: var(--correct) !important; color: #000; font-weight: bold; }
-        .wrong { background: var(--wrong) !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="description" content="Zakovat - Interaktiv test platformasi">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Zakovat - Interaktiv Test Platformasi</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiWmFrb3ZhdCIsInNob3J0X25hbWUiOiJaYWtvdmF0IiwiZGVzY3JpcHRpb24iOiJJbnRlcmFrdGl2IHRlc3QgcGxhdGZvcm1hc2kiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBmMDcxNyIsInRoZW1lX2NvbG9yIjoiIzdjM2FlZCJ9">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--bg:#0f0717;--bg2:#1a0e2e;--bg3:#241545;--bg4:#2e1d56;--primary:#7c3aed;--primary2:#a855f7;--primary3:#c084fc;--accent:#f59e0b;--accent2:#fbbf24;--success:#10b981;--danger:#ef4444;--info:#3b82f6;--text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;--text4:#64748b;--border:#3b2063;--shadow:0 4px 24px rgba(124,58,237,.15);--radius:12px;--radius2:16px;--transition:all .3s cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6}
+a{color:var(--primary2);text-decoration:none;transition:var(--transition)}
+a:hover{color:var(--primary3)}
+button{cursor:pointer;font-family:inherit;transition:var(--transition)}
+input,textarea,select{font-family:inherit;transition:var(--transition)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--primary2)}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes glow{0%,100%{box-shadow:0 0 5px var(--primary),0 0 10px var(--primary)}50%{box-shadow:0 0 20px var(--primary),0 0 40px var(--primary)}}
+@keyframes countDown{from{transform:scale(1.5);opacity:1}to{transform:scale(1);opacity:.8}}
+
+.animate-fade{animation:fadeIn .5s ease}
+.animate-slide{animation:slideIn .5s ease}
+.animate-scale{animation:scaleIn .4s ease}
+.animate-pulse{animation:pulse 2s infinite}
+.animate-float{animation:float 3s ease-in-out infinite}
+.animate-spin{animation:spin 1s linear infinite}
+.animate-glow{animation:glow 2s infinite}
+
+/* Layout */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(15,7,23,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:12px;font-size:1.4rem;font-weight:800;color:var(--primary2)}
+.nav-brand .logo{width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-link{padding:8px 16px;border-radius:8px;color:var(--text2);font-size:.9rem;font-weight:500;border:none;background:transparent}
+.nav-link:hover,.nav-link.active{background:var(--bg3);color:var(--primary2)}
+.nav-user{display:flex;align-items:center;gap:12px}
+.nav-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;cursor:pointer}
+.nav-hamburger{display:none;background:none;border:none;color:var(--text);font-size:1.5rem;padding:8px}
+
+.main{margin-top:64px;padding:24px;max-width:1400px;margin-left:auto;margin-right:auto;width:100%}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:24px;transition:var(--transition)}
+.card:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:1.2rem;font-weight:700;color:var(--text)}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius);font-weight:600;font-size:.95rem;border:none;transition:var(--transition)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(124,58,237,.4)}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary2)}
+.btn-success{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.btn-success:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(16,185,129,.4)}
+.btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
+.btn-danger:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(239,68,68,.4)}
+.btn-sm{padding:8px 16px;font-size:.85rem}
+.btn-lg{padding:16px 32px;font-size:1.1rem}
+.btn-icon{width:40px;height:40px;padding:0;border-radius:50%}
+.btn-block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* Forms */
+.form-group{margin-bottom:20px}
+.form-label{display:block;margin-bottom:8px;font-weight:600;color:var(--text2);font-size:.9rem}
+.form-input{width:100%;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.95rem;outline:none}
+.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+.form-input::placeholder{color:var(--text4)}
+textarea.form-input{min-height:100px;resize:vertical}
+select.form-input{cursor:pointer}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-primary{background:rgba(124,58,237,.2);color:var(--primary2)}
+.badge-success{background:rgba(16,185,129,.2);color:var(--success)}
+.badge-danger{background:rgba(239,68,68,.2);color:var(--danger)}
+.badge-accent{background:rgba(245,158,11,.2);color:var(--accent)}
+.badge-info{background:rgba(59,130,246,.2);color:var(--info)}
+
+/* Tables */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);color:var(--text2);font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px}
+td{font-size:.9rem;color:var(--text2)}
+tr:hover td{background:rgba(124,58,237,.05)}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:scaleIn .3s ease}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:1.2rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text3);font-size:1.3rem;padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--bg3);color:var(--text)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px}
+
+/* Toast */
+.toast-container{position:fixed;top:80px;right:20px;z-index:3000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:14px 20px;border-radius:var(--radius);color:#fff;font-weight:500;font-size:.9rem;animation:slideInRight .3s ease;display:flex;align-items:center;gap:10px;min-width:280px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.toast-success{background:linear-gradient(135deg,#059669,#10b981)}
+.toast-error{background:linear-gradient(135deg,#dc2626,#ef4444)}
+.toast-info{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.toast-warning{background:linear-gradient(135deg,#d97706,#f59e0b)}
+
+/* Home Page */
+.hero{text-align:center;padding:60px 20px;position:relative}
+.hero-title{font-size:3rem;font-weight:900;background:linear-gradient(135deg,var(--primary2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.hero-sub{font-size:1.2rem;color:var(--text3);margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto}
+.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:900px;margin:0 auto 40px}
+.hero-card{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius2);padding:32px;cursor:pointer;text-align:center;transition:var(--transition)}
+.hero-card:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:0 12px 40px rgba(124,58,237,.2)}
+.hero-card-icon{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px}
+.hero-card-title{font-size:1.3rem;font-weight:700;margin-bottom:8px}
+.hero-card-desc{color:var(--text3);font-size:.95rem}
+.hero-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:1000px;margin:0 auto;padding:0 20px}
+.hero-feature{display:flex;align-items:center;gap:12px;padding:16px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
+.hero-feature-icon{font-size:1.5rem}
+.hero-feature-text{font-size:.9rem;color:var(--text2)}
+
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;display:flex;align-items:center;gap:16px}
+.stat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.stat-info{flex:1}
+.stat-value{font-size:1.8rem;font-weight:800}
+.stat-label{color:var(--text3);font-size:.85rem}
+
+/* Test Room */
+.room-code-display{font-size:2.5rem;font-weight:900;letter-spacing:8px;color:var(--accent);text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius);border:2px dashed var(--border);margin:16px 0}
+.players-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.player-card{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
+.player-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+.player-name{font-weight:600;font-size:.9rem}
+.player-score{color:var(--accent);font-weight:700}
+
+/* Timer */
+.timer{font-size:3rem;font-weight:900;text-align:center;padding:16px}
+.timer.warning{color:var(--danger);animation:pulse .5s infinite}
+.timer-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:8px 0}
+.timer-bar-fill{height:100%;border-radius:3px;transition:width 1s linear}
+
+/* Question */
+.question-card{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius2);padding:32px;margin:16px 0}
+.question-num{color:var(--primary2);font-weight:700;font-size:.9rem;margin-bottom:8px}
+.question-text{font-size:1.3rem;font-weight:700;margin-bottom:24px;line-height:1.5}
+.question-options{display:grid;gap:12px}
+.option-btn{padding:16px 20px;background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1rem;text-align:left;cursor:pointer;transition:var(--transition);font-weight:500}
+.option-btn:hover{border-color:var(--primary);background:var(--bg3)}
+.option-btn.selected{border-color:var(--primary);background:rgba(124,58,237,.15)}
+.option-btn.correct{border-color:var(--success);background:rgba(16,185,129,.15);color:var(--success)}
+.option-btn.wrong{border-color:var(--danger);background:rgba(239,68,68,.15);color:var(--danger)}
+
+/* Leaderboard */
+.leaderboard-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.leaderboard-rank{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
+.rank-1{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#000}
+.rank-3{background:linear-gradient(135deg,#b45309,#d97706);color:#fff}
+.rank-other{background:var(--bg3);color:var(--text3)}
+.leaderboard-info{flex:1}
+.leaderboard-name{font-weight:700}
+.leaderboard-stats{color:var(--text3);font-size:.85rem}
+.leaderboard-score{font-size:1.3rem;font-weight:800;color:var(--accent)}
+
+/* Chat */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 140px)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+.chat-msg{display:flex;gap:10px;max-width:75%;animation:fadeIn .3s ease}
+.chat-msg.self{align-self:flex-end;flex-direction:row-reverse}
+.chat-msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem}
+.chat-msg-content{padding:10px 14px;border-radius:12px;font-size:.9rem}
+.chat-msg:not(.self) .chat-msg-content{background:var(--bg3);border-bottom-left-radius:4px}
+.chat-msg.self .chat-msg-content{background:var(--primary);border-bottom-right-radius:4px}
+.chat-msg-meta{font-size:.7rem;color:var(--text4);margin-top:4px}
+.chat-input-area{display:flex;gap:8px;padding:12px;background:var(--bg2);border-top:1px solid var(--border)}
+.chat-input-area input{flex:1}
+
+/* Achievements */
+.achievement-card{display:flex;align-items:center;gap:16px;padding:20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);transition:var(--transition)}
+.achievement-card.unlocked{border-color:var(--accent);background:rgba(245,158,11,.05)}
+.achievement-card.locked{opacity:.5}
+.achievement-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.achievement-info{flex:1}
+.achievement-name{font-weight:700;font-size:1rem}
+.achievement-desc{color:var(--text3);font-size:.85rem}
+.achievement-progress{margin-top:6px;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.achievement-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px}
+
+/* Groups */
+.group-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;transition:var(--transition);cursor:pointer}
+.group-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.group-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.group-name{font-weight:700;font-size:1.1rem}
+.group-members{color:var(--text3);font-size:.85rem}
+
+/* Profile */
+.profile-header{display:flex;align-items:center;gap:24px;padding:24px;background:var(--bg2);border-radius:var(--radius2);border:1px solid var(--border);margin-bottom:24px}
+.profile-avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:800;border:3px solid var(--primary)}
+.profile-info{flex:1}
+.profile-name{font-size:1.6rem;font-weight:800}
+.profile-role{color:var(--primary2);font-weight:600}
+.profile-stats{display:flex;gap:24px;margin-top:8px}
+.profile-stat{text-align:center}
+.profile-stat-value{font-size:1.3rem;font-weight:800;color:var(--accent)}
+.profile-stat-label{font-size:.75rem;color:var(--text4)}
+
+/* Admin */
+.admin-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:24px;margin-bottom:20px}
+.admin-section-title{font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* Notifications */
+.notif-panel{position:fixed;top:64px;right:0;width:360px;max-height:calc(100vh - 64px);background:var(--bg2);border-left:1px solid var(--border);z-index:1500;overflow-y:auto;transform:translateX(100%);transition:transform .3s ease}
+.notif-panel.open{transform:translateX(0)}
+.notif-item{padding:16px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--transition)}
+.notif-item:hover{background:var(--bg3)}
+.notif-item.unread{border-left:3px solid var(--primary)}
+.notif-title{font-weight:600;font-size:.9rem}
+.notif-text{color:var(--text3);font-size:.85rem;margin-top:4px}
+.notif-time{color:var(--text4);font-size:.75rem;margin-top:4px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto}
+.tab{padding:10px 20px;border-radius:8px;border:none;background:transparent;color:var(--text3);font-weight:600;font-size:.9rem;white-space:nowrap}
+.tab.active{background:var(--primary);color:#fff}
+
+/* Progress */
+.progress{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .5s ease}
+
+/* Empty State */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state-icon{font-size:4rem;margin-bottom:16px;opacity:.5}
+.empty-state-title{font-size:1.3rem;font-weight:700;color:var(--text2);margin-bottom:8px}
+.empty-state-text{margin-bottom:20px}
+
+/* Loading */
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius)}
+
+/* Responsive */
+@media(max-width:768px){
+.navbar{padding:0 16px}
+.nav-links{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--bg2);flex-direction:column;padding:20px;z-index:999}
+.nav-links.open{display:flex}
+.nav-hamburger{display:block}
+.main{padding:16px;margin-top:56px}
+.hero-title{font-size:2rem}
+.hero-sub{font-size:1rem}
+.room-code-display{font-size:1.5rem;letter-spacing:4px}
+.timer{font-size:2rem}
+.profile-header{flex-direction:column;text-align:center}
+.profile-stats{justify-content:center}
+.notif-panel{width:100%}
+.dash-grid{grid-template-columns:1fr}
+.chat-msg{max-width:90%}
+}
+
+/* Confetti */
+.confetti-piece{position:fixed;top:-10px;width:10px;height:10px;z-index:9999;animation:confetti 3s ease-in forwards;pointer-events:none}
+
+/* Print */
+@media print{.navbar,.toast-container,.notif-panel{display:none}.main{margin-top:0;padding:0}}
+</style>
 </head>
 <body>
-<div class="container">
-    <div id="login-card" class="card active">
-        <h1 style="text-align:center">Tizimga Kirish</h1>
-        <p style="text-align:center; color:#aaa">Ismingizni kiriting va testni boshlang</p>
-        <input type="text" id="user-name" placeholder="Ismingiz va familiyangiz...">
-        <button class="btn btn-primary" onclick="handleLogin()">Kirish</button>
-    </div>
-
-    <div id="lobby-card" class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 id="welcome-user">Salom!</h2>
-            <div class="counter-badge">Ishtirokchilar: <span id="total-players">0</span></div>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead><tr><th>№</th><th>Ishtirokchi</th><th>Ball</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
-        </div>
-        <button class="btn btn-primary" onclick="startQuiz()">TESTNI BOSHLASH</button>
-    </div>
-
-    <div id="quiz-card" class="card">
-        <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
-        <div id="q-info" style="color:var(--secondary); font-weight:bold; margin-bottom:10px;"></div>
-        <h2 id="q-text" style="min-height: 60px; font-size: 1.1rem;"></h2>
-        <div class="options" id="opt-box"></div>
-        
-        <button id="next-btn" class="btn btn-success" style="display: none;" onclick="nextQuestion()">Keyingisi ➔</button>
-        
-        <button class="btn btn-danger" onclick="finishQuiz()">Testni yakunlash</button>
-    </div>
-
-    <div id="result-card" class="card" style="text-align:center;">
-        <h1>Yakuniy Natija</h1>
-        <div style="font-size: 4rem; color: var(--primary); font-weight: 800;" id="final-score">0</div>
-        <p id="final-desc"></p>
-        <button class="btn btn-primary" onclick="showLobby()">Reytingga qaytish</button>
-    </div>
-</div>
+<div class="app" id="app"></div>
+<div class="toast-container" id="toasts"></div>
 
 <script>
-    let currentUser = "";
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+  APP_NAME: 'Zakovat',
+  APP_SUBTITLE: 'Interaktiv test platformasi',
+  VERSION: '2.0.0',
+  PEERJS_KEY: undefined, // uses default PeerJS cloud server
+  MAX_QUESTIONS: 100,
+  MAX_OPTIONS: 8,
+  MIN_OPTIONS: 2,
+  TIMER_DEFAULT: 30,
+  TIMER_MAX: 300,
+  RATE_LIMIT_MSG: 5000,
+  RATE_LIMIT_TEST: 30000,
+  MAX_MESSAGES_PER_MIN: 10,
+  STORAGE_PREFIX: 'zakovat_',
+  AUTO_SAVE_INTERVAL: 30000,
+  INACTIVITY_TIMEOUT: 1800000,
+};
+
+// ==================== SECURITY MANAGER ====================
+class SecurityManager {
+  constructor() {
+    this.rateLimits = {};
+    this.sanitized = new WeakSet();
+  }
+
+  sanitize(str) {
+    if (!str || typeof str !== 'string') return str;
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+
+  sanitizeHTML(html) {
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
+  }
+
+  validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  validatePhone(phone) {
+    return /^\+?[\d\s\-()]{7,15}$/.test(phone);
+  }
+
+  validateUsername(name) {
+    return name && name.length >= 3 && name.length <= 30 && /^[a-zA-Z0-9_\u0400-\u04FF\u0600-\u06FF]+$/.test(name);
+  }
+
+  async hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + CONFIG.STORAGE_PREFIX);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async encryptData(data, key) {
+    try {
+      const encoder = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(key), 'PBKDF2', false, ['deriveKey']);
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const derivedKey = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, derivedKey, encoder.encode(JSON.stringify(data)));
+      return { salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) };
+    } catch (e) { return null; }
+  }
+
+  async decryptData(encData, key) {
+    try {
+      const encoder = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(key), 'PBKDF2', false, ['deriveKey']);
+      const derivedKey = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new Uint8Array(encData.salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(encData.iv) }, derivedKey, new Uint8Array(encData.data));
+      return JSON.parse(new TextDecoder().decode(decrypted));
+    } catch (e) { return null; }
+  }
+
+  rateLimit(action, limit = CONFIG.RATE_LIMIT_MSG) {
+    const now = Date.now();
+    if (!this.rateLimits[action]) this.rateLimits[action] = [];
+    this.rateLimits[action] = this.rateLimits[action].filter(t => now - t < limit);
+    if (this.rateLimits[action].length >= CONFIG.MAX_MESSAGES_PER_MIN) return false;
+    this.rateLimits[action].push(now);
+    return true;
+  }
+
+  generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  }
+
+  generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  checkPasswordStrength(password) {
     let score = 0;
-    let currentIdx = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    return { score, label: ['Juda zaif', 'Zaif', 'O\'rtacha', 'Yaxshi', 'Kuchli', 'Juda kuchli'][score], color: ['#ef4444', '#f59e0b', '#f59e0b', '#10b981', '#10b981', '#7c3aed'][score] };
+  }
+}
 
-    const questions = [
-        { q: "1. O‘zbek tili……", a: ["Xalqimizning ko‘p asrlik madaniy, ilmiy-ma’rifiy va badiiy tafakkuri, intellektual salohiyatining yorqin va bebaho mahsuli bo‘lgan jahondagi boy va qadimiy tillardan biridir", "Jahondagi boy va qadimiy tillardan biridir", "Intellektual salohiyatining yorqin va bebaho mahsuli", "Xalqimizning ilmiy-ma’rifiy va badiiy tafakkuri"], c: 0 },
-        { q: "4. Oilada, ko‘cha-ko‘yda, insonlarning fikr almashinish jarayonida qo‘llanadigan nutq uslubi...", a: ["so’zlashuv uslub", "rasmiy uslubi", "Ilmiy uslub", "Badiiy uslub"], c: 0 },
-        { q: "5. Ilm-fanga oid nazariy ma’lumotlar ifodalangan matnlar…", a: ["ilmiy matnlar deyiladi", "rasmiy matnlar deyiladi", "Badiiy matnlar deyiladi", "Yozma matnlar deyiladi"], c: 0 },
-        { q: "6. Badiiy asarlarga xos bo‘lib, unda badiiylik, ifodaviylik, ta’sirchanlik kuchli bo‘ladi. Bu uslub inson hayotining barcha tomonlarini qamrab oladi. Bu uslubda tilning barcha imkoniyatlaridan foydalaniladi. Ushbu fikrlar qaysi uslub haqida?", a: ["badiiy uslub", "rasmiy uslub", "Ilmiy uslub", "So‘zlashuv uslubi"], c: 0 },
-        { q: "7. Lotincha so‘z bo‘lib, “xalq, omma” ma’nolarini anglatadi. Davrning eng dolzarb muammolarini omma e’tiboriga televideniya, gazeta-jurnal va radio orqali yetkazadi. Oliy majlis yig‘inlari va turli xil anjumanlarda ushbu nutq uslubidan foydalaniladi. Fikr qaysi uslub haqida?", a: ["publisistik uslub", "rasmiy uslub", "Ilmiy uslub", "So‘zlashuv uslubi"], c: 0 },
-        { q: "8. Tutuq belgisi to‘g‘ri qo‘llangan javobni toping.", a: ["Ishoq", "Ish’oq", "I’shoq", "Is’ho’q"], c: 0 },
-        { q: "9. Qaysi so‘zdagi nuqtalar o‘rnida jarangli, sirg‘aluvchi, lab-tish tovushi yozilsa ham, uning jarangsiz jufti talaffuz qilinadi?", a: ["a..tomat", "a..zal", "ta..silot", "-sha..qat"], c: 0 },
-        { q: "10. Qaysi qatorda quyi keng unlilardan so‘ng talaffuzda tovush orttirilishi kuzatiladigan so‘zlar ko‘rsatilgan? 1) radio; 2) said; 3) okean; 4) saodat; 5) doimo; 6) taajjub; 7) shoira", a: ["2, 5, 7", "1,2, 5, 7", "1, 2, 3, 5", "2, 4, 5, 6, 7"], c: 0 },
-        { q: "11. Quyidagi qaysi so‘zlarda nuqtalar o‘rniga “o” yoziladi? 1) m..bodo; 2) s..mon; 3) t..mosha; 4) j..hongir; 5) h..mon; 6) s..vob", a: ["1, 2, 3, 4, 5, 6", "2,3,4,5,6", "1, 2, 3", "2, 3"], c: 0 },
-        { q: "12. Qaysi javobda yasama so‘zlar berilgan?", a: ["baliqpaz, toshloq, ishchi", "sovuqqon, badavlat, maktab", "kitob, yo‘llar, chiqar", "suv, ma’naviy, keltir"], c: 0 },
-        { q: "14. Zid ma’noli so‘zlarni toping.", a: ["katta-kichik", "tinch-totuv", "Ozg‘in-oriq", "yosh-yosh"], c: 0 },
-        { q: "15. Siyosiy subyektlarning nomlarini anglatuvchi ijtimoiy-siyosiy leksika berilgan qatorni toping.", a: ["Prezident, vazir, deputat", "Savdogar, dehqon, choysho’r", "gulchi,farrosh,suxandon", "novvoy,otboqar,baliqchi"], c: 0 },
-        { q: "16. Adabiyot san’atiga oid terminlarni toping.", a: ["epizod, komediya, tragediya", "komediya, roman,vokal", "opera, simfoniya,portret", "daromad,inflatsiya, roman"], c: 0 },
-        { q: "18. Shevalar adabiy tildan qaysi jihatlari bilan farq qiladi?", a: ["Leksik,fonetik,grammatik", "fonetik, leksik, rammatik,sintaksis", "Grammatik", "fonetik, yozma"], c: 0 },
-        { q: "19. Qaysi javobda shevaga xos so‘zlar berilgan?", a: ["kelopti, borvotti, aytovuz", "ushbu,kitob,daftar", "bu yoqqa, ana u yerda", "oliynasab, mujgon, go‘ja"], c: 0 },
-        { q: "20. Maqola qaysi uslublarga xos?", a: ["ilmiy,publisistik", "rasmiy, badiiy", "badiiy, ilmiy", "so‘zlashuv,ilmiy"], c: 0 },
-        { q: "22. Adabiy tilga xos so‘zlarni toping.", a: ["kelyapman", "Nalug", "Ishkop", "Ketuttiman"], c: 0 },
-        { q: "23. Adabiy til uchun me’yor sanaladigan so‘zlarni toping.", a: ["tuxum, chumoli, beshik", "inak, uy, o‘jak", "g‘o‘ra, qarinja, mayak", "takya, uchak, shoti"], c: 0 },
-        { q: "25. Qaysi uslubda qaror qilindi, inobatga olinsin, ijro uchun qabul qilinsin, tasdiqlandi kabi qoliplashgan so‘z va so‘z birikmalari keng qo‘llaniladi?", a: ["rasmiy uslubda", "badiiy uslubda", "ommabop uslubda", "ilmiy uslubda"], c: 0 },
-        { q: "26. Ijtimoiy-siyosiy atamalar va atama birikmalari (fuqarolik burchi, iqtisodiy tejamkorlik, siyosiy vaziyat, hukumat tangligi, va h.k.) qaysi uslubni shakllantiruvchi vositalar sanaladi?", a: ["publisistik uslub", "ilmiy uslub", "rasmiy uslub", "so‘zlashuv uslubi"], c: 0 },
-        { q: "27. Qaysi uslubni monografiya, ilmiy maqola, dissertatsiya, avtoreferat kabilar tashkil etadi?", a: ["ilmiy uslub", "badiiy uslub", "rasmiy uslub", "ommabop uslub"], c: 0 },
-        { q: "28. Qaysi uslubda “muxbirimiz xabar berishicha”, “elchixona xodimining so‘ziga ko‘ra”, “muxbirimiz voqea ro‘y bergan joydan xabar beradi” kabi iboralar qo‘llaniladi?", a: ["publisistik uslub", "badiiy uslub", "ilmiy uslub", "rasmiy uslub"], c: 0 },
-        { q: "29. Qaysi qatorda ilmiy uslubga xos gap berilgan?", a: ["Ega va kesim gapning rammatik asosi hisoblanadi.", "Seni hur va ozod kuylaymen.", "Saxiylik va olijanoblik ulug‘vor fazilatdir", "Nedin g‘amnok ko‘rinasiz?"], c: 0 },
-        { q: "30. Ariqlarda suvlar qaymoq bog‘lagan. Berilgan gap qaysi uslubga xos?", a: ["badiiy uslub", "ilmiy uslub", "publitsistik uslub", "rasmiy uslub"], c: 0 },
-        { q: "31. Badiiy uslubga xos gapni aniqlang.", a: ["butun osmonni bulutlarning og‘ir, qalin, qoramtir namati qoplagan.", "Stakanlarning ikkovida ham rangli eritma bor.", "Ma’lumotnoma tuman hokimiyatiga ko‘rsartish uchun berildi", "Sen menga: “ovqating undog‘, ovqating mundog‘ – degan gapni- ilaverma"], c: 0 },
-        { q: "32. Qaysi uslub turida tilning tasviriy-ta’siriy vositalari yordami bilan obrazlar vositasida kishiga estetik ta’sir ko’rsatiladi?", a: ["badiiy uslubda", "rasmiy uslubda", "ilmiy uslubda", "publitsistik uslubda"], c: 0 },
-        { q: "35. Axloqiy jihat kasbiy faoliyat jarayonida odamlarning………….asoslanadi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["Axloqiy munosabatlari sohasiga, axloqiy va qadriyatlariga, xulq-atvor ko‘rsatmalariga, kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy mezonlariga", "ularning axloqiy va qadriyatlariga", "xulq-atvor ko‘rsatmalariga", "kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy-axloqiy mezonlariga asoslanadi"], c: 0 },
-        { q: "36. O‘zbek tilining asoschisi kim?", a: ["xalq", "fitrat", "Abdulla Avloniy", "Abdulla Qodiriy"], c: 0 },
-        { q: "37. O‘zbek tilida nechta unli tovush bor?", a: ["6 ta: a,i,u,o,o‘e", "4 ta: a,I,u,o", "6 ta: a,I,u,o,b,v", "6 ta: a,I,u,k,b,v"], c: 0 },
-        { q: "38. O‘zbekistonda jinsi, irqi, millati, tili, dini, ijtimoiy kelib chiqishi, e’tiqodi, shaxsiy va ijtimoiy mavqeyidan qat’I nazar, har kimga ta’lim olish uchun teng ………. Kafolatlanadi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["huquqlar", "gapirishlar", "Tinglashlar", "Internetga kirishlar"], c: 0 },
-        { q: "39. Oʻzbekistonda maktabda oʻqish …………… hisoblanadi. Nuqtalar o‘rniga mos so‘zni qo‘ying", a: ["majburiy", "Ixtiyoriy", "Beixtiyor", "Bilmadim"], c: 0 },
-        { q: "40. Ta’lim tizimi yagona va uzluksiz bo‘lib, qaysi ta’lim turlari mavjud?: 1) maktabgacha ta’lim va tarbiya; 2) umumiy o‘rta; 3) o‘rta maxsus ta’lim; 4) professional ta’lim; 5) oliy ta’lim; 6) oliy ta’limdan eying ta’lim; 7) kadrlarni qayta tayyorlash va ularning malakasini oshirish; 8) maktabdan tashqari ta’lim.", a: ["1,2,3,4,5,6,7,8.", "1,2,3,4", "1,5,6,7,8", "2,3,4,8"], c: 0 },
-        { q: "41. Badiiy asar qahramonlarining o‘z-o‘ziga yoki o‘zgalarga qaratilgan nutqi……", a: ["monologik nutq", "og’zaki nutq", "Diologik nutq", "Yozma nutq"], c: 0 },
-        { q: "43. Tarbiyaning maqsad va vazifalari borasida muayyan xalqning hayotiy tajribasi hamda turmush tarzida shakllangan amaliy qarashlar majmui; muayyan jamiyatda yashash uchun har bir odam amal qilishi shart sanalgan va urf odat, udum, xulq odob, marosim, anʼana, turmush tarzi, badiiy ijod, o‘yin singari empirik vositalarda namoyon buladigan amaliy faoliyat bu………..", a: ["xalq pedagogikasi", "so’zlash pedagogikasi", "bolalar pedagogikasi", "yoshlar pedagogikasi"], c: 0 },
-        { q: "44. Abdulla Avloniy qalamiga mansub xalq pedagogikasining noyob durdonasini ko‘rsating", a: ["“Turkiy guliston yoxud axloq”", "“Xamsa”", "“Qutadg‘u bilig”", "“Devonu lug‘ot it turk”"], c: 0 },
-        { q: "46. Musaffo osmon uzra tinchlik ramzi oq kabutarlar parvoz qilar edi. Berilgan gap qaysi uslubga xos?", a: ["badiiy uslub", "publisistik uslub", "ilmiy uslub", "rasmiy uslub"], c: 0 },
-        { q: "47. Akademik yozuvning og‘zaki shakli nima deb ataladi?", a: ["akademik nutq", "nutq", "so‘zlashuv uslubi", "rasmiy matn"], c: 0 },
-        { q: "48. “Tarbiya biz uchun yo hayot, yo mamot, yo halokat, yo najot…” deb boshlanuvchi fikr egasi kim?", a: ["Abdulla Avloniy", "Alisher Navoiy", "Fitrat", "Ibrat"], c: 0 },
-        { q: "49. O‘zbek adabiy tili necha ko‘rinishga ega va ular qaysilar?", a: ["2 ga: og‘zaki,yozma", "3 ga: og‘zaki va yozma,suhbat", "4 ga: og‘zaki,yozma,suhbat,tinglash", "Barcha javoblat to‘g‘ri"], c: 0 },
-        { q: "50. “Apteka” so‘zining o‘zbekcha muqobilini belgilang", a: ["Dorixona", "Tijorat", "Do‘kon", "Bank"], c: 0 },
-        { q: "51. Xalq pedagogikasining rivojlanishi uchun sabab bo‘luvchi omillarni toping.", a: ["barcha javob to‘g‘ri", "din", "tashqi ta’sirlar", "urf-odatning o‘zgarishi"], c: 0 },
-        { q: "52. Quyida keltirilgan qatorda imloviy jihatdan xato yozilgan qatorni belgilang", a: ["halq, baht", "bahor, mehnatkash", "ko‘hlik, bel", "san’atkor, bastakor"], c: 0 },
-        { q: "53. Quydagi matn qaysi uslub namunasi hisoblanadi? Fonetika-grekcha so‘zdan olingan bo‘lib,nutq tovushlarini o‘rganuvchi tilshunoslik bo‘limi sanaladi.", a: ["ilmiy uslub", "badiiy uslib", "rasmiy uslub", "ommabop uslub"], c: 0 },
-        { q: "54. …….. turida tilning tasviriy-ta’siriy vositalari yordami bilan obrazlar vositasida kishiga estetik ta’sir ko’rsatiladi. Nuqtalar o‘rniga mos uslub turini qo‘ying.", a: ["badiiy uslubda", "rasmiy uslubda", "ilmiy uslubda", "publitsistik uslubda"], c: 0 },
-        { q: "55. So‘zlashuv uslubi……….jarayonida qo‘llanadigan nutq uslubi. Nuqtalar o‘rniga mos jumlani qo‘ying", a: ["Barcha javoblar to‘g‘ri", "Oilada, ko‘chada, insonlarning og‘zaki tarzda fikr almashishi", "Ko‘chada", "Insonlarning og‘zaki tarzda fikr almashishida"], c: 0 },
-        { q: "56. Badiiy uslubga xos gapni aniqlang.", a: ["Qorong‘u kechada ko‘kka ko‘z tikib, Eng yorug‘ yulduzdan seni so‘rayman", "Stakanlarning ikkovida ham rangli eritma bor.", "Ma’lumotnoma tuman hokimiyatiga ko‘rsartish uchun berildi.", "Sen menga: “ovqating undog‘, ovqating mundog‘ – degan gapni-ilaverma"], c: 0 },
-        { q: "57. Pasport, tug‘ilganlik haqidagi guvohnoma, nikohni qayd etish hujjatlari qaysi uslubda yoziladi?", a: ["rasmiy", "ilmiy", "ommabop", "so‘zlashuv"], c: 0 },
-        { q: "58. Rasmiy uslubning qaysi turida qonun va farmonlar yaratiladi?", a: ["sof qonunchilik", "rasmiy-diplomatik", "idoraviy-devonxona", "barcha turida yaratiladi"], c: 0 },
-        { q: "59. Ma’lum bir shaxs tomonidan o‘z shaxsiy hayoti va faoliyati haqida bayon qilingan yozuv nomi keltirilgan qatorni belgilang", a: ["tarjimai hol", "qo’llanma", "vasiyatnoma", "ko‘rsatma"], c: 0 },
-        { q: "60. Muassasa yoki ayrim shaxslar faoliyati bilan bog‘liq biron-bir bo‘lib o‘tgan voqea, hodisa, ish-harakatni yoki mevcut holatni tasdiqlash, unga guvohlik berish maqsadida bir necha kishi tomonidan tuzilgan hujjat turi qanday nom bilan ataladi?", a: ["dalolatnoma", "ko‘rsatma", "vasiyatnoma", "qo‘llanma"], c: 0 },
-        { q: "61. Muayyan muassasa yoki ayrim shaxs o‘z nomidan ish ko‘rish uchun ikkinchi bir shaxsga ishonch bildiradigan yozma vakolat turi, bu……..", a: ["ishonchnoma", "vasiyatnoma", "ko‘rsatma", "qo‘llanma"], c: 0 },
-        { q: "63. Ko‘rik, tanlov, musobaqa va boshqalarga nisbatan qaysi hujjat turi tuziladi?", a: ["nizom", "yo‘riqnoma", "dalolatnoma", "guvohnoma"], c: 0 },
-        { q: "65. Shartnoma bu…..", a: ["ikki yoki undan ortiq tomonning fuqarolik huquqlari va majburiyatlarini belgilash, o‘zgartirish yoki to‘xtatish yo‘lidagi kelishuvidir.", "Bir kishining fuqarolik huquqlaridir", "dalolatnomadir", "nizomdir"], c: 0 },
-        { q: "66. Farmoyish hujjatlari nimalar asosida yuzaga keladi?", a: ["Tashkilot rahbarlarining buyruq, ko‘rsatma, farmoyishi, qarorlari asosida yuzaga keladi", "Tashkilot rahbarlarining buyruqlari asosida yuzaga keladi", "Tashkilot rahbarlarining ko‘rsatmalari asosida yuzaga keladi", "Tashkilot rahbarlarining qarorlari asosida yuzaga keladi"], c: 0 },
-        { q: "68. Idoraviy devonxona hujjatlariga nimalar kiradi?", a: ["Ariza,bayonnoma,bildirishnoma,vasiyatnoma,dalolatnoma,ishonchnoma,ma’lumotnoma, tafsifnoma, tavsiyanoma, taklifnoma, tarjimai hol,tushuntirish xati, e’lon, hisobot.", "Ariza, bayonnoma, bildirishnoma", "Vasiyatnoma, dalolatnoma, ishonchnoma", "Taklifnoma, tarjimai hol, tushuntirish xati, e’lon, hisobot."], c: 0 },
-        { q: "69. Arizaning zaruriy qismlariga qaysilar kiradi?", a: ["Ariza yo‘llangan muassasaning yoki mansabdor shaxsning nomi,ariza yozuvchining turar joyi,vazifasi,ismi,otasining ismi familyasi,hujjatning nomi( ariza),matn ( takilif,iltimos,shikoyat),ilova ( agar zarur deb bilsa),ariza yozuvchining imzosi,ismi va otasining ismi bosh harflari,familyasi,ariza yozilgan vaqt ( yil,kun,oy)", "Ariza yo‘llangan muassasaning yoki mansabdor shaxsning nomi", "Ariza yozuvchining turar joyi, vazifasi, ismi, otasining ismi familyasi", "Hujjatning nomi( ariza),matn ( takil,iltimos,shikoyat),ilova ( agar zarur deb bilsa)"], c: 0 },
-        { q: "70. Doimiy ish ko‘ruvchi organlar (ilmiy kengash va boshqalar), shuningdek vaqtinchalik ish ko‘ruvchi organlar (konferensiyalar, yig‘ilishlar, anjumanlar, komissiyalar) faoliyatida, albatta, ………. Yozilishi kerak. Nuqtalar o‘rniga mos hujjat turini qo‘ying.", a: ["Bayonnoma", "Dalolatnoma", "Ko‘rsatma", "Qo‘llanma"], c: 0 },
-        { q: "71. Bayonnoma yozishni tashkil qilish kimning asosiy vazifasi sanaladi?", a: ["kotibning", "raisning", "Suhbatdoshning", "Kitobxonning"], c: 0 },
-        { q: "72. Muayyan muassasa ( tarkibiy qism ) rahbariga xizmat faoliyati bilan aloqador muhim masalalar yuzasidan yoki yuqori idora, mansabdor shaxsga biron-bir voqea va hodisa haqida xabar berish zaruriyati tug‘ilganda taqdim etiladigan mufassil yozma axborot, bu…….dir. Nuqtalar o‘rniga mos hujjat turini qo‘ying", a: ["bildirish", "ko’rsatma", "Dalolatnoma", "Qo‘llanma"], c: 0 },
-        { q: "73. Elektron hujjat aylanishi nimalardan iborat bo‘ladi?", a: ["Elektron hujjatlarni internet orqali jo‘natish va qabul qilib olishdan", "Yozuv xatidan", "Suhbat xatidan", "Tinglashdan"], c: 0 },
-        { q: "75. Tashkiliy hujjatlarning turlari to‘g‘ri berilgan qatorni belgilang", a: ["Guvohnoma, yo‘riqnoma,nizom,qoida,ustav,shartnoma", "Guvohnoma", "Yo‘riqnoma,nizom.", "Ustav, shartnomalar"], c: 0 },
-        { q: "76. Muayyan shaxsning xizmat va boshqa holatlarini, shuningdek biror ishga ( masalan taftish o‘tkazishga) oid vakolatini ko‘rsatuvchi hujjat, bu…..", a: ["Guvohnomadir", "Maktabni bitirganlik haqidagi guvohnoma", "Tug‘ilganlik haqidagi guvohnoma", "Pasport olish haqidagi guvohnoma"], c: 0 },
-        { q: "77. Qonun yoki boshqa me’yoriy hujjatlarni tushuntirish maqsadida chiqariladigan huquqiy hujjat, bu….", a: ["yo’riqnoma", "Guvohnoma", "Dalolatnoma", "Nizom"], c: 0 },
-        { q: "80. Hujjatchilikka doir matnlar doimo … masalasiga alohida e’tibor beradi. Nuqtalar o‘rniga mos jumlani qo‘ying.", a: ["Adabiy til me’yorlari", "suhbatga", "tinglashga", "barcha javoblar to‘g‘ri"], c: 0 },
-        { q: "81. “Spravka” ma’nosini qanday nom bilan ifoda etish mumkin?", a: ["Ma’lumotnoma”", "guvohnoma”", "Bildirish”", "Daloalatnoma"], c: 0 },
-        { q: "82. Rasmiy ish uslubida qanday so‘zlar ishlatilmaydi?", a: ["Kichraytirish-erkalash qo‘shimchalarini olgan so‘zlar, ko‘tarinki-tantanovor so‘zlar, shevaga oid so‘zlar, bachkana, dag‘al so‘zlar, tor doiradagi kishilar tushunadigan so‘zlar, o‘xshatish, jonlantirish, mubolag‘a, istiora, tashxis kabi obrazli tafakkur ifodasi uchun xizmat qiluvchi usullar", "Kichraytirish-erkalash qo‘shimchalarini olgan so‘zlar, ko‘tarinki-tantanovor so‘zlar", "Shevaga oid so‘zlar, bachkana, dag‘al so‘zlar, tor doiradagi kishilar tushunadigan so‘zlar", "O‘xshatish, jonlantirish, mubolag‘a, istiora, tashxis kabi obrazli tafakkur ifodasi uchun xizmat qiluvchi usullar"], c: 0 },
-        { q: "83. Hujjat matni qanday talablarga javob berishi kerak?", a: ["Aniqlik, ixchamlik, lo‘ndalik, mazmuniy to‘liqlik talablariga javob berishi kerak", "Aniqlik, ixchamlik bo‘lishi kerak", "Lo‘ndalik, mazmuniy to‘liqlik", "Emotsional ta’sirchan"], c: 0 },
-        { q: "86. O‘zbek tili qanday lahjalarga ega?", a: ["o‘g‘uz, qipchoq, qarluq", "qipchoq, o‘g‘uz", "dialekt", "qarluq, qipchoq"], c: 0 },
-        { q: "88. Adabiy til uchun qaysi hudud shevalari asos qilib olingan?", a: ["Farg‘ona va Toshkent", "Andijon va Xorazim", "Namangan va Surxondaryo", "Qoraqalpoq va Andijon"], c: 0 },
-        { q: "89. Quydagi matn qaysi uslub namunasi hisoblanadi? Yomg‘ir – suyuq tomchi holidagi atmosfera yog’ini. Tomchining iametric 0, 50, 6 mm bo‘ladi.", a: ["ilmiy uslub", "rasmiy uslub", "badiiy uslub", "publitsistik uslub"], c: 0 },
-        { q: "90. Dars jarayonidagi nazariyalar bayoni va konferensiyalarda qo‘llanadigan nutq shakli nima deb ataladi?", a: ["Akademik nutq", "Akademik yozuv", "So‘zlashuv uslubi", "Badiiy uslub"], c: 0 },
-        { q: "91. Axborotni badiiy shaklda beruvchi uslub turi qaysi?", a: ["Badiiy publitsistika", "Badiiy uslub", "Publitsistik uslub", "So‘zlashuv uslubi"], c: 0 },
-        { q: "93. O‘zbek tilida nechta uslub bor?", a: ["5 ta", "4 ta", "3 ta", "6 ta"], c: 0 },
-        { q: "94. Umumiy o‘rta ta’lim nechanchi sinflarni o‘z ichiga oladi?", a: ["1-11-sinf", "9-11-sinflar", "5-11-sinflar", "1-4-sinflar"], c: 0 },
-        { q: "96. Kasbiy faoliyat jarayonida odamlarning axloqiy munosabatlari sohasiga, ularning axloqiy va qadriyatlariga, xulq-atvor ko’rsatmalariga, kasbiy vazifalarini bajarish jarayonida bajariladigan harakatlarning axloqiy-axloqiy mezonlariga asoslanadigan jihat qaysi?", a: ["axloqiy jihat", "sotsiologik jihat", "Iqtisodiy jihat", "Psixologik jihat"], c: 0 },
-        { q: "97. Tilni nima uchun ijtimoiy hodisa sifatida baholanadi?", a: ["Jamiyatda kishilarning munosabatga kirishishiga xizmat qilgani uchun", "Tarixiy hodisa bo‘lgani uchun", "Yangilanib turgani uchun", "Eskirishi mumkinligi uchun"], c: 0 },
-        { q: "98. Nutqining kommunikativ sifatlariga nimalar kiradi?", a: ["Barcha javob to‘g‘ri", "Aniqlik, tushunarlilik", "To‘g‘rilik, mantiqiylik", "Ifodalilik, soflik"], c: 0 },
-        { q: "102. O‘zbekistonda ta’lim tizimi qanday?", a: ["Uzluksiz", "Tadrijiy", "Ixtiyoriy", "Majburiy"], c: 0 },
-        { q: "103. O‘quvchilarga dastlabki bilim va savodxonlik bo‘yicha ko‘nikmalar ta’limning qaysi shaklida beriladi?", a: ["Boshlang‘ich ta’limda", "O‘rta ta’limda", "Tayanch o‘rta ta’lim", "Maktabgacha ta’lim"], c: 0 },
-        { q: "106. Yakka shaxsga ishora qilib hurmat ma’nosni ifodalagan ular olmoshi qatnashgan javobi aniqlang.", a: ["Sobir tog‘amni yaxshi ko‘raman. Ular biznikiga bir yilda bir keladilar", "Sakkizinchi sinf o‘quvchilari faol. Ular har bir tadbirda o‘z chiqishlari bilan ishtirok etishadi", "Ularning har ikkisi bugungi musobaqada ilk marotaba qatnashmoqda.", "Yer yuzida tillar ko‘p. Olimlarning hisob-kitobiga ko‘ra ularning miqdori 7000 ga yaqin."], c: 0 },
-        { q: "107. O‘smirlarimiz xalqaro turnirlarda g‘alaba qozonmoqdalar. O‘zbekning dovrug‘ini olamga yoymoqdalar. Ushbu gapda yoymoq so‘zi qaysi ma’noda qo‘llangan?", a: ["Mashhur qilmoq, ovoza qilmoq", "Tevarak-atrofga taralmoq, anqimoq.", "Baqirib ovoza qilmoq", "Kichik-kichik guruhlarga bo‘linib ketmoq."], c: 0 },
-        { q: "112. Shevaga oid so‘zlar qaysi uslubda qo‘llanmaydi?", a: ["rasmiy uslubda", "badiiy uslubda", "Publitsistik uslubda", "So‘zlashuv uslubida"], c: 0 },
-        { q: "113. Nima uchun badiiy uslubda so‘zlashuv uslubi namunalaridan foydalaniladi?", a: ["Barcha javob to‘g‘ri", "Qahramonning muayyan hududga mansubligini ta’kidlash", "Mahalliy koloritni yaratish", "Hayotning ealistic tasvirini chizishga yordam beradi"], c: 0 },
-        { q: "115. Dunyo hamjamiyati, mustaqil mamlakatlar hamdo‘stligi, mustaqillikni mustahkamlash. Mazkur qoliplashgan nutq shakllari qaysi uslubga xos?", a: ["Ommabop uslub", "So‘zlashuv uslub", "Rasmiy uslub", "Badiiy uslub"], c: 0 },
-        { q: "117. Adabiy til me’yorlariga qat’iy amal qilingan so‘zlashuv uslubi qanday nom bilan ataladi?", a: ["Adabiy so‘zlashuv uslubi", "Oddiy so‘zlashuv uslubi", "So‘zlashuv uslubi adabiy til qoidalariga rioya qilmaydi", "Barcha javob trg‘ri"], c: 0 },
-        { q: "118. So‘zlashuv uslubi odatda qanday shaklda namoyon bo‘ladi?", a: ["Diolog va monolog", "Diolog", "Monolog", "To‘g‘ri javob mavjud emas"], c: 0 },
-        { q: "119. “Tilshunoslarning fikriga ko‘ra, bunday matnlarni yozishda yuzaga keladigan asosiy qiyinchilik gipoteza va nazariyalarni oqilona isbotlash zarurati, shuningdek tizimli rivoyatning ahamiyati bilan bog‘liq”. Ushbu fikrlar qaysi matn shakli haqida?", a: ["Ilmiy matn", "Ommabop matn", "Badiiy matn", "Barcha matnlar shunday xususiyatga ega"], c: 0 },
-        { q: "120. Glossariy nima?", a: ["Atamalarning izohli lug‘ati", "Tarjima lug‘at", "So‘zlarning qomusiy izohi", "Nazariya"], c: 0 },
-        { q: "122. Qaysi xalqlarning pedagogikasi bir xil?", a: ["Hech bir xalqning pedagogikasi bir-birini takrorlamaydi", "Xitoy va koreys", "German va yegipet", "Ingliz va o‘zbek"], c: 0 },
-        { q: "123. Xalq hayotida eng sekin o‘zgaradigan narsa nima?", a: ["Xalq pedagogikasi", "Kiyinish odati", "Turmush-tarzi", "Oilaviy qadriyatlari"], c: 0 },
-        { q: "125. Muayyan bir masalani o‘z ichiga oladigan hujjatlarga nima deb ataladi?", a: ["Sodda xujjatlar", "Murakkab xujjatlar", "Aralash xujjatlar", "Jamlanma hujjatlar"], c: 0 },
-        { q: "126. Ikki yoki undan ortiq masalani o‘z ichiga oladigan xujjatlar qanday nom bilan ataladi?", a: ["Murakkab xujjatlar", "Sodda xujjatlar", "Qolipli xujjatlar", "Na’munaviy xujjatlar"], c: 0 },
-        { q: "128. Qolipli hujjatlar - ?", a: ["Barcha javoblar to‘g‘ri", "Odatda, oldindan tayyorlangan bosma ish qog‘ozlariga yoziladi", "Ikki turli axborot aks etadi", "O‘zgarmas"], c: 0 },
-        { q: "129. Qanday matnlardagi jumlalarni o‘chirish yoki o‘zgartirish mumkin emas?", a: ["Hujjatlardagi", "Badiiy matnlar", "Publitsistik", "Har qanday matnni o‘zgartirish mumkin"], c: 0 },
-        { q: "130. Radio va televideniyada chiqayotgan siyosiy sharhlovchilar, notiqlarning nutqlari publitsistik uslubning qaysi shakliga kiradi?", a: ["Og‘zaki shakli", "Yozma shakli", "Internet publitsistikasi", "Ommabop publitsistika"], c: 0 },
-        { q: "131. Sharqda X–XIX asrlarda qanday xujjat turlari keng qo‘llangan?", a: ["barcha javoblar to‘g‘ri", "yorliq, farmon, noma", "bitimlar, arznoma,", "qarznomalar, vasiqa, tilxat"], c: 0 },
-        { q: "132. Qaysi matn namunasi axborotni xolis aks ettiradi?", a: ["Rasmiy matn", "Publitsistik matn", "Badiiy matn", "Adabiy matn"], c: 0 },
-        { q: "133. Nisbatan uzun jumlalar qaysi matn shaklida mavjud bo‘lmaydi?", a: ["Rasmiy matn", "Publitsistik matn", "Badiiy matn", "Adabiy matn"], c: 0 },
-        { q: "136. Faqat birsub masala yuzasidan tuzilgan hujjatlar mazmuniga ko‘ra qanday hujjatlar sirasiga kiradi?", a: ["Sodda", "Murakkab", "Tashqi", "Ichki"], c: 0 },
-        { q: "137. Ma’lum bir muassasaning o‘zidagina yaratiladigan hujjatlar yaratilish o‘rniga ko‘ra qanday nom bilan ataladi?", a: ["Ichki", "Tashqi", "Umumiy", "Alohida"], c: 0 },
-        { q: "139. Bayon shakliga ko‘ra qanday hujjatlarning erkin yaratiladi?", a: ["Xususiy", "Qolipli", "Namunaviy", "Sodda"], c: 0 },
-        { q: "140. Muassasadagi ko‘p takrorlanuvchi muammolarni bartaraf etish yuzasidan tayyorlangan hujjatlar bayon shakliga ko‘ra qanday nom bilan ataladi?", a: ["Namunaviy", "Xususiy", "Qolipli", "Sodda"], c: 0 },
-        { q: "141. Safar guvohnomalari bayon shakliga ko‘ra qanday nom bilan ataladi?", a: ["Qolipli", "Xususiy", "Namunaviy", "Murakkab"], c: 0 },
-        { q: "142. Bayon shakliga ko‘ra qanday hujjatlar to‘ldiriladi?", a: ["Qolipli", "Xususiy", "Namunaviy", "Tashqi"], c: 0 },
-        { q: "143. Qanday hujjatlar yuridik kuchga ega emas?", a: ["Qoralama hujjatlar", "Farmonlar", "Ko‘chirmalar", "Berilgan javoblarning barchasi to‘g‘ri."] }
-    ];
+const security = new SecurityManager();
 
-    function getResults() {
-        return JSON.parse(localStorage.getItem('rus_test_v2026') || '[]');
+// ==================== STORAGE MANAGER ====================
+class StorageManager {
+  get(key, defaultValue = null) {
+    try {
+      const item = localStorage.getItem(CONFIG.STORAGE_PREFIX + key);
+      return item ? JSON.parse(item) : defaultValue;
+    } catch { return defaultValue; }
+  }
+
+  set(key, value) {
+    try {
+      localStorage.setItem(CONFIG.STORAGE_PREFIX + key, JSON.stringify(value));
+      return true;
+    } catch { return false; }
+  }
+
+  remove(key) {
+    localStorage.removeItem(CONFIG.STORAGE_PREFIX + key);
+  }
+
+  clear() {
+    Object.keys(localStorage).filter(k => k.startsWith(CONFIG.STORAGE_PREFIX)).forEach(k => localStorage.removeItem(k));
+  }
+}
+
+const storage = new StorageManager();
+
+// ==================== NOTIFICATION MANAGER ====================
+class NotificationManager {
+  constructor() {
+    this.notifications = storage.get('notifications', []);
+    this.listeners = [];
+  }
+
+  add(type, title, text) {
+    const notif = { id: security.generateId(), type, title, text, time: Date.now(), read: false };
+    this.notifications.unshift(notif);
+    if (this.notifications.length > 100) this.notifications = this.notifications.slice(0, 100);
+    storage.set('notifications', this.notifications);
+    this.listeners.forEach(fn => fn(notif));
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body: text, icon: '🎓' });
     }
+    return notif;
+  }
 
-    function saveResults(db) {
-        localStorage.setItem('rus_test_v2026', JSON.stringify(db));
+  markRead(id) {
+    const n = this.notifications.find(n => n.id === id);
+    if (n) { n.read = true; storage.set('notifications', this.notifications); }
+  }
+
+  markAllRead() {
+    this.notifications.forEach(n => n.read = true);
+    storage.set('notifications', this.notifications);
+  }
+
+  getUnread() { return this.notifications.filter(n => !n.read); }
+
+  onChange(fn) { this.listeners.push(fn); }
+
+  requestPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
+  }
+}
 
-    function handleLogin() {
-        const name = document.getElementById('user-name').value.trim();
-        if(!name) return alert("Iltimos, ismingizni kiriting!");
-        currentUser = name;
-        let db = getResults();
-        if(!db.find(u => u.name === currentUser)) {
-            db.push({name: currentUser, score: 0});
-            saveResults(db);
-        }
-        showLobby();
+const notifManager = new NotificationManager();
+
+// ==================== TOAST SYSTEM ====================
+function showToast(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toasts');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ==================== AUTH MANAGER ====================
+class AuthManager {
+  constructor() {
+    this.currentUser = storage.get('currentUser', null);
+    this.users = storage.get('users', []);
+  }
+
+  async register(username, email, password, role = 'student') {
+    if (!security.validateUsername(username)) return { ok: false, error: 'Foydalanuvchi nomi 3-30 belgi, faqat harflar, raqamlar va _' };
+    if (!security.validateEmail(email)) return { ok: false, error: 'Email manzil noto\'g\'ri' };
+    if (password.length < 6) return { ok: false, error: 'Parol kamida 6 belgi bo\'lishi kerak' };
+    if (this.users.find(u => u.username === username)) return { ok: false, error: 'Bu foydalanuvchi nomi band' };
+    if (this.users.find(u => u.email === email)) return { ok: false, error: 'Bu email band' };
+
+    const hash = await security.hashPassword(password);
+    const user = {
+      id: security.generateId(),
+      username,
+      email,
+      passwordHash: hash,
+      role,
+      avatar: username[0].toUpperCase(),
+      createdAt: Date.now(),
+      stats: { testsCreated: 0, testsTaken: 0, totalScore: 0, correctAnswers: 0, totalAnswers: 0, streak: 0, bestStreak: 0, lastActive: Date.now() },
+      achievements: [],
+      groups: [],
+      settings: { theme: 'dark', language: 'uz', notifications: true, sound: true }
+    };
+
+    this.users.push(user);
+    storage.set('users', this.users);
+    this.currentUser = user;
+    storage.set('currentUser', user);
+    notifManager.add('success', 'Xush kelibsiz!', `${username} muvaffaqiyatli ro'yxatdan o'tdi`);
+    return { ok: true, user };
+  }
+
+  async login(username, password) {
+    const user = this.users.find(u => u.username === username || u.email === username);
+    if (!user) return { ok: false, error: 'Foydalanuvchi topilmadi' };
+    const hash = await security.hashPassword(password);
+    if (user.passwordHash !== hash) return { ok: false, error: 'Parol noto\'g\'ri' };
+    this.currentUser = user;
+    storage.set('currentUser', user);
+    notifManager.add('info', 'Kirish', 'Tizimga muvaffaqiyatli kirdingiz');
+    return { ok: true, user };
+  }
+
+  logout() {
+    this.currentUser = null;
+    storage.remove('currentUser');
+    navigate('home');
+  }
+
+  updateProfile(updates) {
+    if (!this.currentUser) return;
+    Object.assign(this.currentUser, updates);
+    const idx = this.users.findIndex(u => u.id === this.currentUser.id);
+    if (idx >= 0) this.users[idx] = this.currentUser;
+    storage.set('users', this.users);
+    storage.set('currentUser', this.currentUser);
+  }
+
+  updateStats(updates) {
+    if (!this.currentUser) return;
+    Object.assign(this.currentUser.stats, updates);
+    this.currentUser.stats.lastActive = Date.now();
+    this.updateProfile({});
+  }
+
+  isLoggedIn() { return !!this.currentUser; }
+
+  isAdmin() { return this.currentUser?.role === 'admin' || this.currentUser?.role === 'teacher'; }
+
+  getAllUsers() { return this.users; }
+
+  deleteUser(id) {
+    this.users = this.users.filter(u => u.id !== id);
+    storage.set('users', this.users);
+  }
+}
+
+const auth = new AuthManager();
+
+// ==================== ACHIEVEMENT SYSTEM ====================
+const ACHIEVEMENTS = [
+  { id: 'first_test', name: 'Birinchi qadam', desc: 'Birinchi test topshiring', icon: '🎯', condition: u => u.stats.testsTaken >= 1 },
+  { id: 'test_10', name: 'Talabgor', desc: '10 ta test topshiring', icon: '📚', condition: u => u.stats.testsTaken >= 10 },
+  { id: 'test_50', name: 'Olim', desc: '50 ta test topshiring', icon: '🎓', condition: u => u.stats.testsTaken >= 50 },
+  { id: 'perfect', name: 'Mukammallik', desc: '100% natija qayd eting', icon: '💎', condition: u => u.stats.totalAnswers > 0 && u.stats.correctAnswers === u.stats.totalAnswers && u.stats.testsTaken >= 1 },
+  { id: 'creator', name: 'Yaratuvchi', desc: '5 ta test tuzing', icon: '✏️', condition: u => u.stats.testsCreated >= 5 },
+  { id: 'creator_20', name: 'Professor', desc: '20 ta test tuzing', icon: '👨‍🏫', condition: u => u.stats.testsCreated >= 20 },
+  { id: 'streak_3', name: 'Ketma-ket', desc: '3 kun ketma-ket faol bo\'ling', icon: '🔥', condition: u => u.stats.streak >= 3 },
+  { id: 'streak_7', name: 'Barqaror', desc: '7 kun ketma-ket faol bo\'ling', icon: '⚡', condition: u => u.stats.streak >= 7 },
+  { id: 'score_1000', name: 'Mingchi', desc: 'Jami 1000 ball to\'plang', icon: '🏆', condition: u => u.stats.totalScore >= 1000 },
+  { id: 'score_5000', name: 'Besh mingchi', desc: 'Jami 5000 ball to\'plang', icon: '👑', condition: u => u.stats.totalScore >= 5000 },
+  { id: 'speed', name: 'Tezkor', desc: 'Testni 30 soniyadan kam vaqtda tugating', icon: '⏱️', condition: u => u._speedAchieved },
+  { id: 'social', name: 'Ijtimoiy', desc: 'Guruhga qo\'shiling', icon: '🤝', condition: u => u.groups && u.groups.length > 0 },
+];
+
+class AchievementManager {
+  check() {
+    if (!auth.currentUser) return [];
+    const newlyUnlocked = [];
+    ACHIEVEMENTS.forEach(a => {
+      if (!auth.currentUser.achievements.includes(a.id) && a.condition(auth.currentUser)) {
+        auth.currentUser.achievements.push(a.id);
+        newlyUnlocked.push(a);
+        notifManager.add('success', 'Yutuq!', `${a.icon} ${a.name} - ${a.desc}`);
+        showToast(`🏆 Yutuq: ${a.name}!`, 'success');
+      }
+    });
+    if (newlyUnlocked.length) {
+      auth.updateProfile({ achievements: auth.currentUser.achievements });
+      showConfetti();
     }
+    return newlyUnlocked;
+  }
 
-    function showLobby() {
-        switchCard('lobby-card');
-        document.getElementById('welcome-user').innerText = `Salom, ${currentUser}!`;
-        const db = getResults();
-        document.getElementById('total-players').innerText = db.length;
-        db.sort((a,b) => b.score - a.score);
-        const body = document.getElementById('leaderboard-body');
-        body.innerHTML = '';
-        db.forEach((user, i) => {
-            const tr = document.createElement('tr');
-            if(user.name === currentUser) tr.className = 'my-row';
-            tr.innerHTML = `<td>${i+1}</td><td>${user.name}</td><td>${user.score}</td>`;
-            body.appendChild(tr);
+  getAll() {
+    return ACHIEVEMENTS.map(a => ({
+      ...a,
+      unlocked: auth.currentUser?.achievements.includes(a.id) || false
+    }));
+  }
+}
+
+const achievementManager = new AchievementManager();
+
+// ==================== TEST ENGINE ====================
+class TestEngine {
+  constructor() {
+    this.tests = storage.get('tests', []);
+    this.activeTest = null;
+    this.activeRoom = null;
+    this.peer = null;
+    this.connections = {};
+    this.testTimer = null;
+    this.questionTimer = null;
+    this.listeners = {};
+  }
+
+  createTest(testData) {
+    const test = {
+      id: security.generateId(),
+      ...testData,
+      createdBy: auth.currentUser?.id,
+      createdByName: auth.currentUser?.username,
+      createdAt: Date.now(),
+      roomCode: security.generateRoomCode(),
+      status: 'waiting',
+      players: [],
+      results: [],
+      questionIndex: 0,
+      settings: {
+        shuffle: testData.shuffle ?? true,
+        timer: testData.timer ?? CONFIG.TIMER_DEFAULT,
+        showResults: testData.showResults ?? true,
+        maxPlayers: testData.maxPlayers ?? 50,
+        isPublic: testData.isPublic ?? false,
+        ...testData.settings
+      }
+    };
+    this.tests.push(test);
+    storage.set('tests', this.tests);
+    if (auth.currentUser) auth.updateStats({ testsCreated: auth.currentUser.stats.testsCreated + 1 });
+    achievementManager.check();
+    return test;
+  }
+
+  getTest(id) { return this.tests.find(t => t.id === id); }
+  getTestByRoom(code) { return this.tests.find(t => t.roomCode === code && t.status !== 'finished'); }
+  getPublicTests() { return this.tests.filter(t => t.settings.isPublic && t.status === 'waiting'); }
+  getUserTests(userId) { return this.tests.filter(t => t.createdBy === userId); }
+
+  startTest(testId) {
+    const test = this.getTest(testId);
+    if (!test) return null;
+    test.status = 'active';
+    test.startedAt = Date.now();
+    test.questionIndex = 0;
+    if (test.settings.shuffle) test.questions = [...test.questions].sort(() => Math.random() - 0.5);
+    storage.set('tests', this.tests);
+    return test;
+  }
+
+  submitAnswer(testId, questionIndex, answerIndex) {
+    const test = this.getTest(testId);
+    if (!test) return null;
+    const question = test.questions[questionIndex];
+    const isCorrect = question && question.correctAnswer === answerIndex;
+    let result = { questionIndex, answerIndex, isCorrect, time: Date.now() };
+    if (!test.results) test.results = [];
+    const existing = test.results.findIndex(r => r.playerId === auth.currentUser?.id && r.questionIndex === questionIndex);
+    if (existing >= 0) test.results[existing] = result;
+    else test.results.push({ playerId: auth.currentUser?.id, playerName: auth.currentUser?.username, ...result });
+    storage.set('tests', this.tests);
+    return isCorrect;
+  }
+
+  finishTest(testId) {
+    const test = this.getTest(testId);
+    if (!test) return null;
+    test.status = 'finished';
+    test.finishedAt = Date.now();
+    storage.set('tests', this.tests);
+    // Calculate scores
+    const playerScores = {};
+    test.results.forEach(r => {
+      if (!playerScores[r.playerId]) playerScores[r.playerId] = { name: r.playerName, score: 0, correct: 0, total: 0 };
+      playerScores[r.playerId].total++;
+      if (r.isCorrect) { playerScores[r.playerId].correct++; playerScores[r.playerId].score += 10; }
+    });
+    // Update user stats
+    if (auth.currentUser) {
+      const myScore = playerScores[auth.currentUser.id];
+      if (myScore) {
+        auth.updateStats({
+          testsTaken: auth.currentUser.stats.testsTaken + 1,
+          totalScore: auth.currentUser.stats.totalScore + myScore.score,
+          correctAnswers: auth.currentUser.stats.correctAnswers + myScore.correct,
+          totalAnswers: auth.currentUser.stats.totalAnswers + myScore.total,
         });
+        achievementManager.check();
+      }
     }
+    return playerScores;
+  }
 
-    function startQuiz() {
-        score = 0;
-        currentIdx = 0;
-        shuffleArray(questions);
-        switchCard('quiz-card');
-        loadQuestion();
+  deleteTest(id) {
+    this.tests = this.tests.filter(t => t.id !== id);
+    storage.set('tests', this.tests);
+  }
+
+  // WebRTC Multiplayer
+  createRoom(testId, onPeerConnect, onPeerData) {
+    const test = this.getTest(testId);
+    if (!test) return;
+    this.activeRoom = test;
+    this.peer = new Peer('zakovat-' + test.roomCode, { debug: 0 });
+    this.peer.on('open', id => {
+      console.log('Room created:', id);
+      showToast('Xona yaratildi: ' + test.roomCode, 'success');
+    });
+    this.peer.on('connection', conn => {
+      conn.on('open', () => {
+        this.connections[conn.peer] = conn;
+        if (onPeerConnect) onPeerConnect(conn);
+        // Send current test state
+        conn.send({ type: 'test_state', test: { ...test, results: [] } });
+      });
+      conn.on('data', data => {
+        if (onPeerData) onPeerData(conn, data);
+      });
+      conn.on('close', () => { delete this.connections[conn.peer]; });
+    });
+    this.peer.on('error', err => {
+      console.error('Peer error:', err);
+      if (err.type === 'unavailable-id') showToast('Bu xona kodi band, qayta urinib ko\'ring', 'error');
+    });
+  }
+
+  joinRoom(roomCode, onConnect, onData) {
+    this.peer = new Peer(undefined, { debug: 0 });
+    this.peer.on('open', () => {
+      const conn = this.peer.connect('zakovat-' + roomCode);
+      conn.on('open', () => {
+        this.connections[conn.peer] = conn;
+        showToast('Xonaga qo\'shildingiz!', 'success');
+        if (onConnect) onConnect(conn);
+      });
+      conn.on('data', data => {
+        if (onData) onData(conn, data);
+      });
+      conn.on('close', () => { delete this.connections[conn.peer]; });
+    });
+    this.peer.on('error', err => {
+      console.error('Peer error:', err);
+      showToast('Xonaga qo\'shilishda xato', 'error');
+    });
+  }
+
+  broadcastToRoom(data) {
+    Object.values(this.connections).forEach(conn => {
+      try { conn.send(data); } catch (e) { console.error('Broadcast error:', e); }
+    });
+  }
+
+  leaveRoom() {
+    Object.values(this.connections).forEach(conn => { try { conn.close(); } catch {} });
+    this.connections = {};
+    if (this.peer) { try { this.peer.destroy(); } catch {} this.peer = null; }
+    this.activeRoom = null;
+    if (this.testTimer) clearInterval(this.testTimer);
+    if (this.questionTimer) clearInterval(this.questionTimer);
+  }
+
+  on(event, fn) {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(fn);
+  }
+
+  emit(event, data) {
+    (this.listeners[event] || []).forEach(fn => fn(data));
+  }
+}
+
+const testEngine = new TestEngine();
+
+// ==================== GROUP MANAGER ====================
+class GroupManager {
+  constructor() {
+    this.groups = storage.get('groups', []);
+  }
+
+  create(name, description, icon = '📚') {
+    const group = {
+      id: security.generateId(),
+      name,
+      description,
+      icon,
+      createdBy: auth.currentUser?.id,
+      createdByName: auth.currentUser?.username,
+      members: [{ id: auth.currentUser?.id, name: auth.currentUser?.username, role: 'owner', joinedAt: Date.now() }],
+      tests: [],
+      messages: [],
+      createdAt: Date.now(),
+      inviteCode: security.generateRoomCode(),
+      settings: { isPublic: false, maxMembers: 100, allowChat: true }
+    };
+    this.groups.push(group);
+    storage.set('groups', this.groups);
+    if (auth.currentUser) {
+      auth.currentUser.groups = auth.currentUser.groups || [];
+      auth.currentUser.groups.push(group.id);
+      auth.updateProfile({ groups: auth.currentUser.groups });
+      achievementManager.check();
     }
+    return group;
+  }
 
-    function loadQuestion() {
-        if(currentIdx >= questions.length) return finishQuiz();
-
-        // Yangi savol yuklanganda "Keyingisi" tugmasini yashiramiz
-        document.getElementById('next-btn').style.display = 'none';
-
-        const q = questions[currentIdx];
-        document.getElementById('q-info').innerText = `Savol ${currentIdx+1} / ${questions.length}`;
-        document.getElementById('q-text').innerText = q.q;
-        document.getElementById('fill').style.width = `${Math.round((currentIdx/questions.length)*100)}%`;
-
-        const correctAnswer = q.a[q.c];
-        const opts = [...q.a];
-        shuffleArray(opts);
-
-        const box = document.getElementById('opt-box');
-        box.innerHTML = '';
-
-        opts.forEach(text => {
-            const div = document.createElement('div');
-            div.className = 'opt';
-            div.innerText = text;
-            div.onclick = () => {
-                document.querySelectorAll('.opt').forEach(o => o.style.pointerEvents = 'none');
-
-                if(text === correctAnswer) {
-                    div.classList.add('correct');
-                    score++;
-                } else {
-                    div.classList.add('wrong');
-                    document.querySelectorAll('.opt').forEach(opt => {
-                        if(opt.innerText === correctAnswer) opt.classList.add('correct');
-                    });
-                }
-
-                // Javob berilgandan keyin tugmani ko'rsatamiz (avtomatik o'tish olib tashlandi)
-                document.getElementById('next-btn').style.display = 'block';
-            };
-            box.appendChild(div);
-        });
+  join(inviteCode) {
+    const group = this.groups.find(g => g.inviteCode === inviteCode);
+    if (!group) return { ok: false, error: 'Guruh topilmadi' };
+    if (group.members.find(m => m.id === auth.currentUser?.id)) return { ok: false, error: 'Siz bu guruhdasiz' };
+    if (group.members.length >= group.settings.maxMembers) return { ok: false, error: 'Guruh to\'la' };
+    group.members.push({ id: auth.currentUser?.id, name: auth.currentUser?.username, role: 'member', joinedAt: Date.now() });
+    storage.set('groups', this.groups);
+    if (auth.currentUser) {
+      auth.currentUser.groups = auth.currentUser.groups || [];
+      auth.currentUser.groups.push(group.id);
+      auth.updateProfile({ groups: auth.currentUser.groups });
+      achievementManager.check();
     }
+    notifManager.add('success', 'Guruh', `${group.name} guruhiga qo'shildingiz`);
+    return { ok: true, group };
+  }
 
-    // Keyingi savolga o'tish funksiyasi
-    function nextQuestion() {
-        currentIdx++;
-        loadQuestion();
+  leave(groupId) {
+    const group = this.groups.find(g => g.id === groupId);
+    if (!group) return;
+    group.members = group.members.filter(m => m.id !== auth.currentUser?.id);
+    storage.set('groups', this.groups);
+    if (auth.currentUser) {
+      auth.currentUser.groups = (auth.currentUser.groups || []).filter(id => id !== groupId);
+      auth.updateProfile({ groups: auth.currentUser.groups });
     }
+  }
 
-    function finishQuiz() {
-        let db = getResults();
-        const userIdx = db.findIndex(u => u.name === currentUser);
-        if(userIdx > -1 && score > db[userIdx].score) {
-            db[userIdx].score = score;
-        } else if(userIdx === -1) {
-            db.push({name: currentUser, score: score});
-        }
-        saveResults(db);
-
-        switchCard('result-card');
-        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+  getById(id) { return this.groups.find(g => g.id === id); }
+  getUserGroups() { return this.groups.filter(g => g.members.some(m => m.id === auth.currentUser?.id)); }
+  addTest(groupId, testId) {
+    const group = this.getById(groupId);
+    if (group) { group.tests.push(testId); storage.set('groups', this.groups); }
+  }
+  addMessage(groupId, text) {
+    const group = this.getById(groupId);
+    if (group) {
+      group.messages.push({ id: security.generateId(), userId: auth.currentUser?.id, userName: auth.currentUser?.username, text, time: Date.now() });
+      if (group.messages.length > 500) group.messages = group.messages.slice(-500);
+      storage.set('groups', this.groups);
     }
+  }
+  delete(id) {
+    this.groups = this.groups.filter(g => g.id !== id);
+    storage.set('groups', this.groups);
+  }
+}
 
-    function switchCard(id) {
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
+const groupManager = new GroupManager();
 
-    function shuffleArray(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
+// ==================== AI QUESTION GENERATOR ====================
+class QuestionGenerator {
+  constructor() {
+    this.templates = {
+      math: [
+        { q: '{a} + {b} = ?', gen: () => { const a = this.r(10,99), b = this.r(10,99); return { q: `${a} + ${b} = ?`, opts: [a+b, a+b+this.r(1,10), a+b-this.r(1,10), this.r(30,200)], correct: 0 }; }},
+        { q: '{a} × {b} = ?', gen: () => { const a = this.r(2,12), b = this.r(2,12); return { q: `${a} × ${b} = ?`, opts: [a*b, a*b+this.r(1,10), a*b-this.r(1,5), a+b], correct: 0 }; }},
+        { q: '{a} - {b} = ?', gen: () => { let a = this.r(20,99), b = this.r(10,a); return { q: `${a} - ${b} = ?`, opts: [a-b, a-b+this.r(1,10), a-b+this.r(1,8), a+b], correct: 0 }; }},
+        { q: 'Kvadratning perimetri {a} sm. Tomonini toping.', gen: () => { const a = this.r(4,40); return { q: `Kvadratning perimetri ${a*4} sm. Tomonini toping.`, opts: [a, a*2, a*4, a/2], correct: 0 }; }},
+        { q: '{a}² = ?', gen: () => { const a = this.r(2,15); return { q: `${a}² = ?`, opts: [a*a, a*a+this.r(1,10), a*a-this.r(1,5), a*2], correct: 0 }; }},
+      ],
+      science: [
+        { q: 'Suvning kimyoviy formulasi?', gen: () => ({ q: 'Suvning kimyoviy formulasi?', opts: ['H₂O', 'CO₂', 'NaCl', 'O₂'], correct: 0 })},
+        { q: 'Quyosh tizimidagi eng katta sayyora?', gen: () => ({ q: 'Quyosh tizimidagi eng katta sayyora?', opts: ['Yupiter', 'Saturn', 'Yer', 'Neptun'], correct: 0 })},
+        { q: 'Fotosintez jarayonida hosil bo\'ladigan gaz?', gen: () => ({ q: 'Fotosintez jarayonida hosil bo\'ladigan gaz?', opts: ['Kislorod', 'Azot', 'Vodorod', 'Karbonat angidrid'], correct: 0 })},
+        { q: 'Yerning tabiiy yo\'ldoshi?', gen: () => ({ q: 'Yerning tabiiy yo\'ldoshi?', opts: ['Oy', 'Quyosh', 'Mars', 'Yulduz'], correct: 0 })},
+        { q: 'Odam tanasidagi eng katta organ?', gen: () => ({ q: 'Odam tanasidagi eng katta organ?', opts: ['Teri', 'Jigar', 'Yurak', 'O\'pka'], correct: 0 })},
+      ],
+      history: [
+        { q: 'O\'zbekiston mustaqillik kuni?', gen: () => ({ q: 'O\'zbekiston mustaqillik kuni?', opts: ['1 sentyabr 1991', '31 avgust 1991', '8 dekabr 1992', '21 mart 1990'], correct: 0 })},
+        { q: 'Amir Temur qachon tug\'ilgan?', gen: () => ({ q: 'Amir Temur qachon tug\'ilgan?', opts: ['1336', '1370', '1405', '1310'], correct: 0 })},
+        { q: 'Buyuk Ipak Yo\'li qaysi davrlarda gullab-yashnagan?', gen: () => ({ q: 'Buyuk Ipak Yo\'li qaysi davrlarda gullab-yashnagan?', opts: ['O\'rta asrlar', 'Antik davr', 'Yangi davr', 'Hozirgi zamon'], correct: 0 })},
+        { q: 'Samarqand poytaxt bo\'lgan davlat?', gen: () => ({ q: 'Samarqand poytaxt bo\'lgan davlat?', opts: ['Temuriylar', 'Shayboniylar', 'Qo\'qon xonligi', 'Xiva xonligi'], correct: 0 })},
+      ],
+      geography: [
+        { q: 'O\'zbekiston poytaxti?', gen: () => ({ q: 'O\'zbekiston poytaxti?', opts: ['Toshkent', 'Samarqand', 'Buxoro', 'Namangan'], correct: 0 })},
+        { q: 'Dunyodagi eng baland cho\'qqi?', gen: () => ({ q: 'Dunyodagi eng baland cho\'qqi?', opts: ['Everest', 'K2', 'Kilimanjaro', 'Elbrus'], correct: 0 })},
+        { q: 'Orol dengizi qaysi davlatlar orasida?', gen: () => ({ q: 'Orol dengizi qaysi davlatlar orasida?', opts: ['O\'zbekiston va Qozog\'iston', 'O\'zbekiston va Turkmaniston', 'Qozog\'iston va Turkmaniston', 'Tojikiston va Qirg\'iziston'], correct: 0 })},
+      ],
+      language: [
+        { q: 'O\'zbek tilida nechta unli tovush bor?', gen: () => ({ q: 'O\'zbek tilida nechta unli tovush bor?', opts: ['6', '5', '7', '8'], correct: 0 })},
+        { q: '"Kitob" so\'zining ko\'plik shakli?', gen: () => ({ q: '"Kitob" so\'zining ko\'plik shakli?', opts: ['Kitoblar', 'Kitobning', 'Kitobga', 'Kitobni'], correct: 0 })},
+        { q: 'O\'zbek alifbosida nechta harf bor?', gen: () => ({ q: 'O\'zbek alifbosida nechta harf bor?', opts: ['29', '28', '30', '33'], correct: 0 })},
+      ],
+      it: [
+        { q: 'HTML nima?', gen: () => ({ q: 'HTML nima?', opts: ['Hypertext Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyper Transfer Markup Language'], correct: 0 })},
+        { q: 'JavaScript da massiv yaratish usuli?', gen: () => ({ q: 'JavaScript da massiv yaratish usuli?', opts: ['[]', '{}', '()', '<>'], correct: 0 })},
+        { q: 'CSS nima?', gen: () => ({ q: 'CSS nima?', opts: ['Cascading Style Sheets', 'Computer Style Sheets', 'Creative Style System', 'Colorful Style Sheets'], correct: 0 })},
+        { q: '1 KB necha bayt?', gen: () => ({ q: '1 KB necha bayt?', opts: ['1024', '1000', '512', '2048'], correct: 0 })},
+        { q: 'Python dasturlash tilining muallifi?', gen: () => ({ q: 'Python dasturlash tilining muallifi?', opts: ['Guido van Rossum', 'James Gosling', 'Brendan Eich', 'Dennis Ritchie'], correct: 0 })},
+      ]
+    };
+  }
+
+  r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  generate(category, count = 5) {
+    const cat = this.templates[category];
+    if (!cat) return [];
+    const questions = [];
+    const used = new Set();
+    for (let i = 0; i < Math.min(count, cat.length); i++) {
+      let idx;
+      do { idx = this.r(0, cat.length - 1); } while (used.has(idx) && used.size < cat.length);
+      used.add(idx);
+      const data = cat[idx].gen();
+      // Shuffle options and track correct answer
+      const optionsWithIndex = data.opts.map((opt, i) => ({ text: String(opt), originalIndex: i }));
+      const shuffled = [...optionsWithIndex].sort(() => Math.random() - 0.5);
+      const correctIndex = shuffled.findIndex(o => o.originalIndex === data.correct);
+      questions.push({
+        id: security.generateId(),
+        text: data.q,
+        type: 'multiple',
+        options: shuffled.map(o => o.text),
+        correctAnswer: correctIndex,
+        category,
+        points: 10,
+        explanation: ''
+      });
     }
+    return questions;
+  }
+
+  generateMixed(count = 10) {
+    const categories = Object.keys(this.templates);
+    const perCategory = Math.ceil(count / categories.length);
+    let all = [];
+    categories.forEach(cat => { all = all.concat(this.generate(cat, perCategory)); });
+    return all.sort(() => Math.random() - 0.5).slice(0, count);
+  }
+
+  getCategories() { return Object.keys(this.templates); }
+}
+
+const questionGen = new QuestionGenerator();
+
+// ==================== LEADERBOARD MANAGER ====================
+class LeaderboardManager {
+  getGlobal(period = 'all') {
+    const users = auth.getAllUsers().filter(u => u.stats.testsTaken > 0);
+    const now = Date.now();
+    let filtered = users;
+    if (period === 'week') filtered = users.filter(u => now - u.stats.lastActive < 7 * 86400000);
+    if (period === 'month') filtered = users.filter(u => now - u.stats.lastActive < 30 * 86400000);
+    return filtered.sort((a, b) => b.stats.totalScore - a.stats.totalScore);
+  }
+
+  getTestLeaderboard(testId) {
+    const test = testEngine.getTest(testId);
+    if (!test || !test.results) return [];
+    const playerScores = {};
+    test.results.forEach(r => {
+      if (!playerScores[r.playerId]) playerScores[r.playerId] = { name: r.playerName, score: 0, correct: 0, total: 0, time: 0 };
+      playerScores[r.playerId].total++;
+      if (r.isCorrect) { playerScores[r.playerId].correct++; playerScores[r.playerId].score += 10; }
+    });
+    return Object.values(playerScores).sort((a, b) => b.score - a.score || b.correct - a.correct);
+  }
+}
+
+const leaderboardManager = new LeaderboardManager();
+
+// ==================== CONFETTI ====================
+function showConfetti() {
+  const colors = ['#7c3aed', '#a855f7', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 2 + 's';
+    piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// ==================== ROUTER ====================
+let currentPage = 'home';
+let pageParams = {};
+
+function navigate(page, params = {}) {
+  currentPage = page;
+  pageParams = params;
+  renderApp();
+  window.scrollTo(0, 0);
+  window.location.hash = page;
+}
+
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.slice(1) || 'home';
+  if (hash !== currentPage) { currentPage = hash; renderApp(); }
+});
+
+// ==================== RENDER ENGINE ====================
+function renderApp() {
+  const app = document.getElementById('app');
+  app.innerHTML = renderNavbar() + `<div class="main">${renderPage()}</div>`;
+  attachEvents();
+  if (auth.isLoggedIn()) achievementManager.check();
+}
+
+function renderNavbar() {
+  if (!auth.isLoggedIn() && ['home', 'login', 'register'].includes(currentPage)) {
+    return `<nav class="navbar">
+      <div class="nav-brand" onclick="navigate('home')"><div class="logo">Z</div> Zakovat</div>
+      <div class="nav-links" id="navLinks">
+        <button class="nav-link ${currentPage==='home'?'active':''}" onclick="navigate('home')">Bosh sahifa</button>
+        <button class="nav-link" onclick="navigate('login')">Kirish</button>
+        <button class="nav-link" onclick="navigate('register')">Ro'yxat</button>
+      </div>
+      <button class="nav-hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </nav>`;
+  }
+
+  const unread = notifManager.getUnread().length;
+  return `<nav class="navbar">
+    <div class="nav-brand" onclick="navigate('dashboard')"><div class="logo">Z</div> Zakovat</div>
+    <div class="nav-links" id="navLinks">
+      <button class="nav-link ${currentPage==='dashboard'?'active':''}" onclick="navigate('dashboard')">Dashboard</button>
+      <button class="nav-link ${currentPage==='create-test'?'active':''}" onclick="navigate('create-test')">Test tuzish</button>
+      <button class="nav-link ${currentPage==='join-test'?'active':''}" onclick="navigate('join-test')">Test topshirish</button>
+      <button class="nav-link ${currentPage==='leaderboard'?'active':''}" onclick="navigate('leaderboard')">Reyting</button>
+      <button class="nav-link ${currentPage==='groups'?'active':''}" onclick="navigate('groups')">Guruhlar</button>
+      <button class="nav-link ${currentPage==='achievements'?'active':''}" onclick="navigate('achievements')">Yutuqlar</button>
+      ${auth.isAdmin()?`<button class="nav-link ${currentPage==='admin'?'active':''}" onclick="navigate('admin')">Admin</button>`:''}
+    </div>
+    <div class="nav-user">
+      <button class="btn-icon btn-secondary" onclick="toggleNotifPanel()" title="Bildirishnomalar">${unread?`<span class="badge badge-danger" style="position:absolute;top:-4px;right:-4px;font-size:.65rem">${unread}</span>`:''}🔔</button>
+      <div class="nav-avatar" onclick="navigate('profile')">${auth.currentUser?.avatar||'?'}</div>
+      <button class="nav-hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </nav>
+  <div class="notif-panel" id="notifPanel">
+    <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+      <strong>Bildirishnomalar</strong>
+      <button class="btn btn-sm btn-secondary" onclick="notifManager.markAllRead();renderApp()">Hammasini o'qish</button>
+    </div>
+    ${notifManager.notifications.slice(0,20).map(n=>`<div class="notif-item ${n.read?'':'unread'}" onclick="notifManager.markRead('${n.id}');renderApp()">
+      <div class="notif-title">${security.sanitizeHTML(n.title)}</div>
+      <div class="notif-text">${security.sanitizeHTML(n.text)}</div>
+      <div class="notif-time">${new Date(n.time).toLocaleString('uz-UZ')}</div>
+    </div>`).join('')||'<div class="empty-state" style="padding:40px"><p>Bildirishnomalar yo\'q</p></div>'}
+  </div>`;
+}
+
+function toggleNotifPanel() {
+  document.getElementById('notifPanel')?.classList.toggle('open');
+}
+
+function renderPage() {
+  switch(currentPage) {
+    case 'home': return renderHome();
+    case 'login': return renderLogin();
+    case 'register': return renderRegister();
+    case 'dashboard': return auth.isLoggedIn() ? renderDashboard() : (navigate('home'), '');
+    case 'create-test': return auth.isLoggedIn() ? renderCreateTest() : (navigate('login'), '');
+    case 'join-test': return auth.isLoggedIn() ? renderJoinTest() : (navigate('login'), '');
+    case 'test-room': return auth.isLoggedIn() ? renderTestRoom() : (navigate('login'), '');
+    case 'test-active': return auth.isLoggedIn() ? renderActiveTest() : (navigate('login'), '');
+    case 'test-results': return auth.isLoggedIn() ? renderTestResults() : (navigate('login'), '');
+    case 'leaderboard': return renderLeaderboard();
+    case 'groups': return auth.isLoggedIn() ? renderGroups() : (navigate('login'), '');
+    case 'group-detail': return auth.isLoggedIn() ? renderGroupDetail() : (navigate('login'), '');
+    case 'achievements': return auth.isLoggedIn() ? renderAchievements() : (navigate('login'), '');
+    case 'profile': return auth.isLoggedIn() ? renderProfile() : (navigate('login'), '');
+    case 'admin': return auth.isAdmin() ? renderAdmin() : (navigate('dashboard'), '');
+    case 'stats': return auth.isLoggedIn() ? renderStats() : (navigate('login'), '');
+    default: return renderHome();
+  }
+}
+
+// ==================== PAGES ====================
+
+function renderHome() {
+  return `<div class="hero animate-fade">
+    <div style="font-size:4rem;margin-bottom:16px">🎓</div>
+    <h1 class="hero-title">Zakovat</h1>
+    <p class="hero-sub">${CONFIG.APP_SUBTITLE} — Bilimlaringizni sinab ko'ring, do'stlaringiz bilan raqobatlashing va yangi chegara belgilang!</p>
+    <div class="hero-cards">
+      <div class="hero-card" onclick="navigate(auth.isLoggedIn()?'create-test':'register')">
+        <div class="hero-card-icon" style="background:rgba(124,58,237,.2)">✏️</div>
+        <div class="hero-card-title">Test tuzish</div>
+        <div class="hero-card-desc">Yangi test yaratish va guruhni boshqarish. Vaqt cheklovi, random savollar va ko'p tanlovli formatlar</div>
+      </div>
+      <div class="hero-card" onclick="navigate(auth.isLoggedIn()?'join-test':'register')">
+        <div class="hero-card-icon" style="background:rgba(245,158,11,.2)">📝</div>
+        <div class="hero-card-title">Test topshirish</div>
+        <div class="hero-card-desc">Xona kodi orqali testga qo'shiling va do'stlaringiz bilan real-time raqobatlashing</div>
+      </div>
+      <div class="hero-card" onclick="navigate(auth.isLoggedIn()?'leaderboard':'register')">
+        <div class="hero-card-icon" style="background:rgba(16,185,129,.2)">🏆</div>
+        <div class="hero-card-title">Reyting</div>
+        <div class="hero-card-desc">Eng yaxshi natijalarni ko'ring va leaderbordda o'rningizni toping</div>
+      </div>
+    </div>
+    <div class="hero-features">
+      <div class="hero-feature"><span class="hero-feature-icon">⚡</span><span class="hero-feature-text">WebRTC real-time</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">🤖</span><span class="hero-feature-text">AI savol generatsiya</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">👥</span><span class="hero-feature-text">Ko'p o'yinchi</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">🔒</span><span class="hero-feature-text">Yuqori xavfsizlik</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">📊</span><span class="hero-feature-text">Statistika</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">🏅</span><span class="hero-feature-text">Yutuqlar tizimi</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">📱</span><span class="hero-feature-text">Mobil qo'llab-quvvatlash</span></div>
+      <div class="hero-feature"><span class="hero-feature-icon">🎓</span><span class="hero-feature-text">Guruh va sinflar</span></div>
+    </div>
+  </div>`;
+}
+
+function renderLogin() {
+  return `<div style="max-width:420px;margin:40px auto" class="animate-fade">
+    <div class="card">
+      <h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">🔐 Tizimga kirish</h2>
+      <div class="form-group">
+        <label class="form-label">Foydalanuvchi nomi yoki email</label>
+        <input class="form-input" id="loginUser" placeholder="Username yoki email..." autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parol</label>
+        <input class="form-input" id="loginPass" type="password" placeholder="Parol..." autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="handleLogin()">Kirish</button>
+      <p style="text-align:center;margin-top:16px;color:var(--text3)">
+        Hisob yo'qmi? <a href="#register" onclick="navigate('register')">Ro'yxatdan o'ting</a>
+      </p>
+    </div>
+  </div>`;
+}
+
+function renderRegister() {
+  return `<div style="max-width:480px;margin:40px auto" class="animate-fade">
+    <div class="card">
+      <h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">📝 Ro'yxatdan o'tish</h2>
+      <div class="form-group">
+        <label class="form-label">Foydalanuvchi nomi</label>
+        <input class="form-input" id="regUser" placeholder="3-30 belgi, harflar, raqamlar, _" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="regEmail" type="email" placeholder="email@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parol</label>
+        <input class="form-input" id="regPass" type="password" placeholder="Kamida 6 belgi" autocomplete="new-password" oninput="updatePasswordStrength(this.value)">
+        <div id="passStrength" style="margin-top:8px;font-size:.85rem"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select class="form-input" id="regRole">
+          <option value="student">O'quvchi</option>
+          <option value="teacher">O'qituvchi</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="handleRegister()">Ro'yxatdan o'tish</button>
+      <p style="text-align:center;margin-top:16px;color:var(--text3)">
+        Hisobingiz bormi? <a href="#login" onclick="navigate('login')">Kirish</a>
+      </p>
+    </div>
+  </div>`;
+}
+
+function updatePasswordStrength(pass) {
+  const result = security.checkPasswordStrength(pass);
+  const el = document.getElementById('passStrength');
+  if (el && pass) el.innerHTML = `<span style="color:${result.color}">Parol kuchi: ${result.label}</span><div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:${result.score*20}%;background:${result.color}"></div></div>`;
+  else if (el) el.innerHTML = '';
+}
+
+function renderDashboard() {
+  const u = auth.currentUser;
+  const stats = u.stats;
+  const recentTests = testEngine.getUserTests(u.id).slice(-3).reverse();
+  const publicTests = testEngine.getPublicTests().slice(0, 3);
+
+  return `<div class="animate-fade">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div><h2 style="font-size:1.5rem">Salom, ${security.sanitizeHTML(u.username)}! 👋</h2><p style="color:var(--text3)">Bugun nima qilamiz?</p></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="navigate('create-test')">✏️ Test tuzish</button>
+        <button class="btn btn-success" onclick="navigate('join-test')">📝 Test topshirish</button>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="stat-card animate-slide">
+        <div class="stat-icon" style="background:rgba(124,58,237,.2)">📝</div>
+        <div class="stat-info"><div class="stat-value">${stats.testsTaken}</div><div class="stat-label">Topshirilgan testlar</div></div>
+      </div>
+      <div class="stat-card animate-slide" style="animation-delay:.1s">
+        <div class="stat-icon" style="background:rgba(245,158,11,.2)">⭐</div>
+        <div class="stat-info"><div class="stat-value">${stats.totalScore}</div><div class="stat-label">Jami ball</div></div>
+      </div>
+      <div class="stat-card animate-slide" style="animation-delay:.2s">
+        <div class="stat-icon" style="background:rgba(16,185,129,.2)">✅</div>
+        <div class="stat-info"><div class="stat-value">${stats.totalAnswers?Math.round(stats.correctAnswers/stats.totalAnswers*100):0}%</div><div class="stat-label">To'g'ri javob</div></div>
+      </div>
+      <div class="stat-card animate-slide" style="animation-delay:.3s">
+        <div class="stat-icon" style="background:rgba(239,68,68,.2)">✏️</div>
+        <div class="stat-info"><div class="stat-value">${stats.testsCreated}</div><div class="stat-label">Tuzilgan testlar</div></div>
+      </div>
+      <div class="stat-card animate-slide" style="animation-delay:.4s">
+        <div class="stat-icon" style="background:rgba(59,130,246,.2)">🔥</div>
+        <div class="stat-info"><div class="stat-value">${stats.streak}</div><div class="stat-label">Ketma-ket kun</div></div>
+      </div>
+      <div class="stat-card animate-slide" style="animation-delay:.5s">
+        <div class="stat-icon" style="background:rgba(168,85,247,.2)">🏅</div>
+        <div class="stat-info"><div class="stat-value">${u.achievements?.length||0}</div><div class="stat-label">Yutuqlar</div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">🎯 Tezkor harakat</h3></div>
+        <div style="display:grid;gap:12px">
+          <button class="btn btn-primary btn-block" onclick="navigate('create-test')">✏️ Yangi test tuzish</button>
+          <button class="btn btn-success btn-block" onclick="navigate('join-test')">🔗 Xona kodiga qo'shilish</button>
+          <button class="btn btn-secondary btn-block" onclick="navigate('groups')">👥 Guruhga qo'shilish</button>
+          <button class="btn btn-secondary btn-block" onclick="navigate('leaderboard')">🏆 Reytingni ko'rish</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">📊 Statistika</h3></div>
+        <div style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px"><span>To'g'ri javoblar</span><span>${stats.correctAnswers}/${stats.totalAnswers}</span></div>
+          <div class="progress"><div class="progress-fill" style="width:${stats.totalAnswers?stats.correctAnswers/stats.totalAnswers*100:0}%;background:linear-gradient(90deg,var(--primary),var(--success))"></div></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px"><span>Yutuqlar</span><span>${u.achievements?.length||0}/${ACHIEVEMENTS.length}</span></div>
+          <div class="progress"><div class="progress-fill" style="width:${(u.achievements?.length||0)/ACHIEVEMENTS.length*100}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+        </div>
+        <button class="btn btn-secondary btn-sm btn-block" onclick="navigate('stats')">Batafsil statistika →</button>
+      </div>
+
+      ${publicTests.length?`<div class="card">
+        <div class="card-header"><h3 class="card-title">🌍 Ommaviy testlar</h3></div>
+        ${publicTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div><strong>${security.sanitizeHTML(t.title)}</strong><br><span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.createdByName}</span></div>
+          <button class="btn btn-sm btn-primary" onclick="joinTestByCode('${t.roomCode}')">Qo'shilish</button>
+        </div>`).join('')}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderCreateTest() {
+  const categories = questionGen.getCategories();
+  return `<div class="animate-fade" style="max-width:800px;margin:0 auto">
+    <h2 style="margin-bottom:24px">✏️ Test tuzish</h2>
+    <div class="tabs" id="createTabs">
+      <button class="tab active" onclick="switchCreateTab('manual')">Qo'lda kiritish</button>
+      <button class="tab" onclick="switchCreateTab('ai')">🤖 AI generatsiya</button>
+    </div>
+
+    <div id="createManual">
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:16px">Test ma'lumotlari</h3>
+        <div class="form-group">
+          <label class="form-label">Test nomi</label>
+          <input class="form-input" id="testTitle" placeholder="Misol: Matematika testi" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tavsif</label>
+          <textarea class="form-input" id="testDesc" placeholder="Test haqida qisqacha..." maxlength="300"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Vaqt (soniya)</label>
+            <input class="form-input" id="testTimer" type="number" value="30" min="5" max="300">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maks o'yinchilar</label>
+            <input class="form-input" id="testMaxPlayers" type="number" value="50" min="2" max="200">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="testShuffle" checked> Savollarni aralashtirish</label>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="testPublic"> Ommaviy test</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3>Savollar</h3>
+          <button class="btn btn-sm btn-primary" onclick="addQuestion()">+ Savol qo'shish</button>
+        </div>
+        <div id="questionsList"></div>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" onclick="handleCreateTest()">🚀 Testni yaratish</button>
+    </div>
+
+    <div id="createAI" style="display:none">
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:16px">🤖 AI savol generatsiyasi</h3>
+        <p style="color:var(--text3);margin-bottom:16px">Kategoriyani tanlang va AI avtomatik savollar yaratadi</p>
+        <div class="form-group">
+          <label class="form-label">Test nomi</label>
+          <input class="form-input" id="aiTestTitle" placeholder="Misol: Matematika testi">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kategoriya</label>
+          <select class="form-input" id="aiCategory">
+            ${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
+            <option value="mixed">Aralash (barcha kategoriyalar)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Savollar soni</label>
+          <input class="form-input" id="aiCount" type="number" value="10" min="3" max="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vaqt (soniya)</label>
+          <input class="form-input" id="aiTimer" type="number" value="30" min="5" max="300">
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="handleAIGenerate()">🤖 Generatsiya qilish</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let questionCount = 0;
+function addQuestion() {
+  questionCount++;
+  const id = questionCount;
+  const container = document.getElementById('questionsList');
+  const div = document.createElement('div');
+  div.className = 'card animate-scale';
+  div.id = `q-${id}`;
+  div.style.marginBottom = '16px';
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong>${id}-savol</strong>
+      <button class="btn btn-sm btn-danger" onclick="document.getElementById('q-${id}').remove()">🗑️</button>
+    </div>
+    <div class="form-group">
+      <input class="form-input q-text" placeholder="Savol matnini kiriting..." data-q="${id}">
+    </div>
+    <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input class="form-input q-opt" placeholder="A variant" data-q="${id}" data-opt="0">
+      <input class="form-input q-opt" placeholder="B variant" data-q="${id}" data-opt="1">
+      <input class="form-input q-opt" placeholder="C variant" data-q="${id}" data-opt="2">
+      <input class="form-input q-opt" placeholder="D variant" data-q="${id}" data-opt="3">
+    </div>
+    <div class="form-group">
+      <label class="form-label">To'g'ri javob</label>
+      <select class="form-input q-correct" data-q="${id}">
+        <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+      </select>
+    </div>`;
+  container.appendChild(div);
+}
+
+function switchCreateTab(tab) {
+  document.getElementById('createManual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.getElementById('createAI').style.display = tab === 'ai' ? 'block' : 'none';
+  document.querySelectorAll('#createTabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'manual' && i === 0) || (tab === 'ai' && i === 1));
+  });
+}
+
+function handleCreateTest() {
+  const title = document.getElementById('testTitle')?.value?.trim();
+  if (!title) return showToast('Test nomini kiriting', 'error');
+  const desc = document.getElementById('testDesc')?.value?.trim() || '';
+  const timer = parseInt(document.getElementById('testTimer')?.value) || 30;
+  const maxPlayers = parseInt(document.getElementById('testMaxPlayers')?.value) || 50;
+  const shuffle = document.getElementById('testShuffle')?.checked ?? true;
+  const isPublic = document.getElementById('testPublic')?.checked ?? false;
+
+  const qTexts = document.querySelectorAll('.q-text');
+  const questions = [];
+  let valid = true;
+  qTexts.forEach(el => {
+    const qId = el.dataset.q;
+    const text = el.value.trim();
+    if (!text) { valid = false; return; }
+    const opts = [];
+    document.querySelectorAll(`.q-opt[data-q="${qId}"]`).forEach(opt => {
+      if (opt.value.trim()) opts.push(opt.value.trim());
+    });
+    if (opts.length < 2) { valid = false; return; }
+    const correct = parseInt(document.querySelector(`.q-correct[data-q="${qId}"]`)?.value) || 0;
+    questions.push({ id: security.generateId(), text, type: 'multiple', options: opts, correctAnswer: Math.min(correct, opts.length-1), points: 10, explanation: '' });
+  });
+
+  if (!valid || questions.length === 0) return showToast('Barcha savollarni to\'ldiring (kamida 2 variant)', 'error');
+
+  const test = testEngine.createTest({ title, description: desc, questions, timer, maxPlayers, shuffle, isPublic });
+  showToast('Test muvaffaqiyatli yaratildi!', 'success');
+  navigate('test-room', { testId: test.id });
+}
+
+function handleAIGenerate() {
+  const title = document.getElementById('aiTestTitle')?.value?.trim();
+  if (!title) return showToast('Test nomini kiriting', 'error');
+  const category = document.getElementById('aiCategory')?.value || 'mixed';
+  const count = parseInt(document.getElementById('aiCount')?.value) || 10;
+  const timer = parseInt(document.getElementById('aiTimer')?.value) || 30;
+
+  const questions = category === 'mixed' ? questionGen.generateMixed(count) : questionGen.generate(category, count);
+  if (questions.length === 0) return showToast('Savollar generatsiya qilinmadi', 'error');
+
+  const test = testEngine.createTest({ title, description: `AI generatsiya: ${category}`, questions, timer, maxPlayers: 50, shuffle: true, isPublic: true });
+  showToast(`${questions.length} ta savol generatsiya qilindi!`, 'success');
+  navigate('test-room', { testId: test.id });
+}
+
+function renderJoinTest() {
+  const publicTests = testEngine.getPublicTests();
+  return `<div class="animate-fade" style="max-width:600px;margin:0 auto">
+    <h2 style="margin-bottom:24px">📝 Test topshirish</h2>
+    <div class="card" style="margin-bottom:20px">
+      <h3 style="margin-bottom:16px">🔗 Xona kodi orqali qo'shilish</h3>
+      <div style="display:flex;gap:12px">
+        <input class="form-input" id="roomCodeInput" placeholder="Xona kodini kiriting (6 belgi)" maxlength="6" style="text-transform:uppercase;font-size:1.2rem;letter-spacing:4px;text-align:center">
+        <button class="btn btn-primary" onclick="joinTestByCode(document.getElementById('roomCodeInput').value)">Qo'shilish</button>
+      </div>
+    </div>
+
+    ${publicTests.length?`<div class="card">
+      <h3 style="margin-bottom:16px">🌍 Ommaviy testlar</h3>
+      ${publicTests.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <strong>${security.sanitizeHTML(t.title)}</strong><br>
+          <span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.timer}s • ${security.sanitizeHTML(t.createdByName)}</span>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="joinTestByCode('${t.roomCode}')">Qo'shilish</button>
+      </div>`).join('')}
+    </div>`:'<div class="card"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Hozircha ommaviy testlar yo\'q</div><div class="empty-state-text">O\'zingiz test tuzing yoki xona kodi orqali qo\'shiling</div></div></div>'}
+  </div>`;
+}
+
+function joinTestByCode(code) {
+  if (!code || code.length < 4) return showToast('Xona kodini to\'g\'ri kiriting', 'error');
+  const test = testEngine.getTestByRoom(code.toUpperCase());
+  if (!test) return showToast('Bunday xona kodi topilmadi', 'error');
+  if (test.status === 'active') return showToast('Test allaqachon boshlangan', 'warning');
+  if (test.status === 'finished') return showToast('Test tugagan', 'warning');
+  navigate('test-room', { testId: test.id });
+}
+
+function renderTestRoom() {
+  const test = testEngine.getTest(pageParams.testId);
+  if (!test) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Test topilmadi</div></div>';
+
+  return `<div class="animate-fade" style="max-width:700px;margin:0 auto">
+    <div class="card" style="text-align:center;margin-bottom:20px">
+      <h2>${security.sanitizeHTML(test.title)}</h2>
+      <p style="color:var(--text3);margin:8px 0">${security.sanitizeHTML(test.description || '')}</p>
+      <div class="room-code-display">${test.roomCode}</div>
+      <p style="color:var(--text3);font-size:.85rem">Ushbu kodni do'stlaringizga yuboring</p>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3>📋 Test ma'lumotlari</h3>
+        <span class="badge badge-primary">${test.questions.length} savol</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.9rem">
+        <div>⏱️ Vaqt: <strong>${test.timer}s</strong></div>
+        <div>👥 Maks: <strong>${test.maxPlayers}</strong></div>
+        <div>🔀 Aralashtirish: <strong>${test.shuffle?'Ha':'Yo\'q'}</strong></div>
+        <div>📊 Natijalar: <strong>${test.settings?.showResults?'Ko\'rsatish':'Yashirish'}</strong></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button class="btn btn-primary btn-lg" onclick="startActiveTest('${test.id}')">🚀 Testni boshlash</button>
+      <button class="btn btn-secondary btn-lg" onclick="testEngine.leaveRoom();navigate('dashboard')">Chiqish</button>
+    </div>
+  </div>`;
+}
+
+// Active test state
+let activeTestState = { testId: null, questionIndex: 0, answers: [], timeLeft: 0, totalTime: 0, isFinished: false };
+
+function startActiveTest(testId) {
+  const test = testEngine.startTest(testId);
+  if (!test) return showToast('Testni boshlashda xato', 'error');
+  activeTestState = { testId, questionIndex: 0, answers: [], timeLeft: test.timer, totalTime: test.timer, isFinished: false };
+  navigate('test-active', { testId });
+}
+
+function renderActiveTest() {
+  const test = testEngine.getTest(pageParams.testId || activeTestState.testId);
+  if (!test) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Test topilmadi</div></div>';
+  if (activeTestState.isFinished) return renderTestResults();
+
+  const q = test.questions[activeTestState.questionIndex];
+  if (!q) return renderTestResults();
+
+  const progress = ((activeTestState.questionIndex) / test.questions.length * 100);
+  const timePercent = (activeTestState.timeLeft / activeTestState.totalTime * 100);
+
+  return `<div class="animate-fade" style="max-width:700px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span class="badge badge-primary">${activeTestState.questionIndex + 1} / ${test.questions.length}</span>
+      <span class="badge ${timePercent<30?'badge-danger':'badge-info'}">⏱️ ${activeTestState.timeLeft}s</span>
+    </div>
+    <div class="progress" style="margin-bottom:8px"><div class="progress-fill" style="width:${progress}%;background:linear-gradient(90deg,var(--primary),var(--primary2))"></div></div>
+    <div class="timer-bar"><div class="timer-bar-fill" style="width:${timePercent}%;background:${timePercent<30?'var(--danger)':'var(--primary)'}"></div></div>
+
+    <div class="question-card">
+      <div class="question-num">Savol ${activeTestState.questionIndex + 1}</div>
+      <div class="question-text">${security.sanitizeHTML(q.text)}</div>
+      <div class="question-options">
+        ${q.options.map((opt, i) => `<button class="option-btn" onclick="selectAnswer(${i})" id="opt-${i}">${String.fromCharCode(65+i)}) ${security.sanitizeHTML(opt)}</button>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
+      <button class="btn btn-secondary" onclick="prevQuestion()" ${activeTestState.questionIndex===0?'disabled':''}>← Oldingi</button>
+      <button class="btn btn-primary" onclick="nextQuestion()">${activeTestState.questionIndex===test.questions.length-1?'Tugatish':'Keyingi →'}</button>
+    </div>
+  </div>`;
+}
+
+function selectAnswer(idx) {
+  const test = testEngine.getTest(activeTestState.testId);
+  if (!test) return;
+  const q = test.questions[activeTestState.questionIndex];
+  activeTestState.answers[activeTestState.questionIndex] = idx;
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+}
+
+function prevQuestion() {
+  if (activeTestState.questionIndex > 0) {
+    activeTestState.questionIndex--;
+    renderApp();
+    restoreSelectedAnswer();
+  }
+}
+
+function nextQuestion() {
+  const test = testEngine.getTest(activeTestState.testId);
+  if (!test) return;
+  const answer = activeTestState.answers[activeTestState.questionIndex];
+  if (answer === undefined) return showToast('Javobni tanlang', 'warning');
+
+  testEngine.submitAnswer(activeTestState.testId, activeTestState.questionIndex, answer);
+
+  if (activeTestState.questionIndex < test.questions.length - 1) {
+    activeTestState.questionIndex++;
+    activeTestState.timeLeft = activeTestState.totalTime;
+    renderApp();
+    restoreSelectedAnswer();
+  } else {
+    finishActiveTest();
+  }
+}
+
+function restoreSelectedAnswer() {
+  const ans = activeTestState.answers[activeTestState.questionIndex];
+  if (ans !== undefined) {
+    setTimeout(() => {
+      const btn = document.getElementById(`opt-${ans}`);
+      if (btn) btn.classList.add('selected');
+    }, 50);
+  }
+}
+
+function finishActiveTest() {
+  activeTestState.isFinished = true;
+  const scores = testEngine.finishTest(activeTestState.testId);
+  showConfetti();
+  navigate('test-results', { testId: activeTestState.testId });
+}
+
+function renderTestResults() {
+  const test = testEngine.getTest(pageParams.testId || activeTestState.testId);
+  if (!test) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Natija topilmadi</div></div>';
+
+  const leaderboard = leaderboardManager.getTestLeaderboard(test.id);
+  const myResult = leaderboard.find(p => p.name === auth.currentUser?.username) || { score: 0, correct: 0, total: test.questions.length };
+  const percent = myResult.total > 0 ? Math.round(myResult.correct / myResult.total * 100) : 0;
+
+  return `<div class="animate-fade" style="max-width:700px;margin:0 auto">
+    <div class="card" style="text-align:center;margin-bottom:20px">
+      <div style="font-size:4rem;margin-bottom:12px">${percent>=80?'🏆':percent>=60?'⭐':'💪'}</div>
+      <h2>Test tugadi!</h2>
+      <p style="color:var(--text3);margin:8px 0">${security.sanitizeHTML(test.title)}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:20px 0">
+        <div><div style="font-size:2rem;font-weight:800;color:var(--accent)">${myResult.score}</div><div style="color:var(--text3);font-size:.85rem">Ball</div></div>
+        <div><div style="font-size:2rem;font-weight:800;color:var(--success)">${percent}%</div><div style="color:var(--text3);font-size:.85rem">To'g'ri</div></div>
+        <div><div style="font-size:2rem;font-weight:800;color:var(--primary2)">${myResult.correct}/${myResult.total}</div><div style="color:var(--text3);font-size:.85rem">Javoblar</div></div>
+      </div>
+    </div>
+
+    ${leaderboard.length?`<div class="card" style="margin-bottom:20px">
+      <h3 style="margin-bottom:16px">🏆 Reyting</h3>
+      ${leaderboard.map((p,i)=>`<div class="leaderboard-item">
+        <div class="leaderboard-rank ${i<3?'rank-'+(i+1):'rank-other'}">${i+1}</div>
+        <div class="leaderboard-info"><div class="leaderboard-name">${security.sanitizeHTML(p.name)}</div><div class="leaderboard-stats">${p.correct}/${p.total} to'g'ri</div></div>
+        <div class="leaderboard-score">${p.score}</div>
+      </div>`).join('')}
+    </div>`:''}
+
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button class="btn btn-primary" onclick="navigate('dashboard')">Dashboard</button>
+      <button class="btn btn-secondary" onclick="navigate('leaderboard')">Global reyting</button>
+    </div>
+  </div>`;
+}
+
+function renderLeaderboard() {
+  const periods = ['all','week','month'];
+  const periodLabels = { all: 'Barcha vaqt', week: 'Haftalik', month: 'Oylik' };
+  const currentPeriod = pageParams.period || 'all';
+  const board = leaderboardManager.getGlobal(currentPeriod);
+
+  return `<div class="animate-fade" style="max-width:700px;margin:0 auto">
+    <h2 style="margin-bottom:16px">🏆 Reyting</h2>
+    <div class="tabs">
+      ${periods.map(p=>`<button class="tab ${currentPeriod===p?'active':''}" onclick="pageParams.period='${p}';renderApp()">${periodLabels[p]}</button>`).join('')}
+    </div>
+
+    ${board.length?board.slice(0,50).map((u,i)=>`<div class="leaderboard-item animate-slide" style="animation-delay:${i*0.05}s">
+      <div class="leaderboard-rank ${i<3?'rank-'+(i+1):'rank-other'}">${i+1}</div>
+      <div class="leaderboard-info">
+        <div class="leaderboard-name">${security.sanitizeHTML(u.username)}</div>
+        <div class="leaderboard-stats">${u.stats.testsTaken} test • ${u.stats.totalAnswers?Math.round(u.stats.correctAnswers/u.stats.totalAnswers*100):0}% to'g'ri</div>
+      </div>
+      <div class="leaderboard-score">${u.stats.totalScore}</div>
+    </div>`).join(''):'<div class="empty-state"><div class="empty-state-icon">🏆</div><div class="empty-state-title">Hali reyting yo\'q</div><div class="empty-state-text">Test topshiring va reytingda o\'rningizni egallang!</div></div>'}
+  </div>`;
+}
+
+function renderGroups() {
+  const myGroups = groupManager.getUserGroups();
+  return `<div class="animate-fade" style="max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h2>👥 Guruhlar</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="showCreateGroupModal()">+ Yangi guruh</button>
+        <button class="btn btn-secondary" onclick="showJoinGroupModal()">🔗 Qo'shilish</button>
+      </div>
+    </div>
+
+    ${myGroups.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+      ${myGroups.map(g=>`<div class="group-card" onclick="navigate('group-detail',{groupId:'${g.id}'})">
+        <div class="group-header"><div class="group-icon" style="background:rgba(124,58,237,.2)">${g.icon}</div><div><div class="group-name">${security.sanitizeHTML(g.name)}</div><div class="group-members">${g.members.length} a'zo • ${g.tests.length} test</div></div></div>
+        <p style="color:var(--text3);font-size:.85rem;margin-bottom:8px">${security.sanitizeHTML(g.description||'')}</p>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${g.members.slice(0,5).map(m=>`<span class="badge badge-primary">${security.sanitizeHTML(m.name)}</span>`).join('')}${g.members.length>5?`<span class="badge badge-secondary">+${g.members.length-5}</span>`:''}</div>
+      </div>`).join('')}
+    </div>`:'<div class="card"><div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">Guruhlar yo\'q</div><div class="empty-state-text">Yangi guruh yarating yoki mavjud guruhga qo\'shiling</div></div></div>'}
+  </div>`;
+}
+
+function renderGroupDetail() {
+  const group = groupManager.getById(pageParams.groupId);
+  if (!group) return '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">Guruh topilmadi</div></div>';
+
+  const isOwner = group.createdBy === auth.currentUser?.id;
+  const groupTests = group.tests.map(tid => testEngine.getTest(tid)).filter(Boolean);
+
+  return `<div class="animate-fade" style="max-width:900px;margin:0 auto">
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-size:3rem">${group.icon}</div>
+          <div><h2>${security.sanitizeHTML(group.name)}</h2><p style="color:var(--text3)">${security.sanitizeHTML(group.description||'')}</p></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${isOwner?`<button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${group.inviteCode}')">📋 Taklif kodi: ${group.inviteCode}</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="groupManager.leave('${group.id}');navigate('groups')">Chiqish</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <div class="card">
+        <h3 style="margin-bottom:16px">👥 A'zolar (${group.members.length})</h3>
+        ${group.members.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div class="player-avatar">${(m.name||'?')[0].toUpperCase()}</div>
+          <div style="flex:1"><strong style="font-size:.9rem">${security.sanitizeHTML(m.name)}</strong><br><span class="badge ${m.role==='owner'?'badge-accent':m.role==='admin'?'badge-primary':'badge-info'}">${m.role}</span></div>
+        </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px">📋 Testlar (${groupTests.length})</h3>
+        ${groupTests.length?groupTests.map(t=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <strong style="font-size:.9rem">${security.sanitizeHTML(t.title)}</strong><br>
+          <span style="font-size:.8rem;color:var(--text3)">${t.questions.length} savol • ${t.status}</span>
+        </div>`).join(''):'<p style="color:var(--text3);font-size:.9rem">Hali test yo\'q</p>'}
+        <button class="btn btn-sm btn-primary btn-block" style="margin-top:12px" onclick="navigate('create-test')">+ Test qo'shish</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px">💬 Guruh chat</h3>
+        <div style="max-height:300px;overflow-y:auto;margin-bottom:12px" id="groupChat">
+          ${group.messages.slice(-20).map(m=>`<div class="chat-msg ${m.userId===auth.currentUser?.id?'self':''}">
+            <div class="chat-msg-avatar" style="background:${m.userId===auth.currentUser?.id?'var(--primary)':'var(--bg3)'}">${(m.userName||'?')[0].toUpperCase()}</div>
+            <div><div class="chat-msg-content">${security.sanitizeHTML(m.text)}</div><div class="chat-msg-meta">${security.sanitizeHTML(m.userName)} • ${new Date(m.time).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'})}</div></div>
+          </div>`).join('')||'<p style="color:var(--text3);font-size:.9rem;text-align:center">Xabarlar yo\'q</p>'}
+        </div>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" id="groupMsgInput" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter')sendGroupMsg('${group.id}')">
+          <button class="btn btn-primary" onclick="sendGroupMsg('${group.id}')">📤</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function sendGroupMsg(groupId) {
+  const input = document.getElementById('groupMsgInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  if (!security.rateLimit('chat_' + groupId)) return showToast('Xabar yuborishda sekinroq yozing', 'warning');
+  groupManager.addMessage(groupId, text);
+  input.value = '';
+  renderApp();
+}
+
+function renderAchievements() {
+  const all = achievementManager.getAll();
+  const unlocked = all.filter(a => a.unlocked).length;
+  return `<div class="animate-fade" style="max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h2>🏅 Yutuqlar</h2>
+      <span class="badge badge-accent">${unlocked}/${all.length} ochilgan</span>
+    </div>
+    <div class="progress" style="margin-bottom:24px"><div class="progress-fill" style="width:${unlocked/all.length*100}%;background:linear-gradient(90deg,var(--primary),var(--accent))"></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+      ${all.map(a=>`<div class="achievement-card ${a.unlocked?'unlocked':'locked'}">
+        <div class="achievement-icon" style="background:${a.unlocked?'rgba(245,158,11,.2)':'var(--bg3)'}">${a.icon}</div>
+        <div class="achievement-info">
+          <div class="achievement-name">${a.name}</div>
+          <div class="achievement-desc">${a.desc}</div>
+          <div class="achievement-progress"><div class="achievement-progress-fill" style="width:${a.unlocked?100:0}%"></div></div>
+        </div>
+        ${a.unlocked?'<span class="badge badge-accent">✓</span>':'<span class="badge badge-secondary">🔒</span>'}
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderProfile() {
+  const u = auth.currentUser;
+  if (!u) return '';
+  const s = u.stats;
+  const percent = s.totalAnswers ? Math.round(s.correctAnswers / s.totalAnswers * 100) : 0;
+  const myGroups = groupManager.getUserGroups();
+
+  return `<div class="animate-fade" style="max-width:800px;margin:0 auto">
+    <div class="profile-header">
+      <div class="profile-avatar">${u.avatar}</div>
+      <div class="profile-info">
+        <div class="profile-name">${security.sanitizeHTML(u.username)}</div>
+        <div class="profile-role">${u.role === 'admin' ? '🔴 Admin' : u.role === 'teacher' ? '🟡 O\'qituvchi' : '🟢 O\'quvchi'}</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-value">${s.totalScore}</div><div class="profile-stat-label">Ball</div></div>
+          <div class="profile-stat"><div class="profile-stat-value">${s.testsTaken}</div><div class="profile-stat-label">Testlar</div></div>
+          <div class="profile-stat"><div class="profile-stat-value">${percent}%</div><div class="profile-stat-label">To'g'ri</div></div>
+          <div class="profile-stat"><div class="profile-stat-value">${u.achievements?.length||0}</div><div class="profile-stat-label">Yutuqlar</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      <div class="card">
+        <h3 style="margin-bottom:16px">✏️ Profilni tahrirlash</h3>
+        <div class="form-group">
+          <label class="form-label">Foydalanuvchi nomi</label>
+          <input class="form-input" id="editUsername" value="${security.sanitizeHTML(u.username)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="editEmail" value="${security.sanitizeHTML(u.email)}" type="email">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="updateProfileInfo()">Saqlash</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px">🔒 Parolni o'zgartirish</h3>
+        <div class="form-group">
+          <label class="form-label">Hozirgi parol</label>
+          <input class="form-input" id="oldPass" type="password" placeholder="Hozirgi parol...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yangi parol</label>
+          <input class="form-input" id="newPass" type="password" placeholder="Yangi parol...">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="changePassword()">O'zgartirish</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px">👥 Guruhlar (${myGroups.length})</h3>
+        ${myGroups.length?myGroups.map(g=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="navigate('group-detail',{groupId:'${g.id}'})">
+          ${g.icon} ${security.sanitizeHTML(g.name)} <span style="color:var(--text3)">(${g.members.length})</span>
+        </div>`).join(''):'<p style="color:var(--text3)">Guruhlarga qo\'shilmagansiz</p>'}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px">⚙️ Sozlamalar</h3>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ${u.settings?.notifications?'checked':''} onchange="auth.updateProfile({settings:{...auth.currentUser.settings,notifications:this.checked}})"> Bildirishnomalar</label>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ${u.settings?.sound?'checked':''} onchange="auth.updateProfile({settings:{...auth.currentUser.settings,sound:this.checked}})"> Ovoz</label>
+        </div>
+        <button class="btn btn-danger btn-block" style="margin-top:16px" onclick="auth.logout()">🚪 Chiqish</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateProfileInfo() {
+  const username = document.getElementById('editUsername')?.value?.trim();
+  const email = document.getElementById('editEmail')?.value?.trim();
+  if (!security.validateUsername(username)) return showToast('Noto\'g\'ri foydalanuvchi nomi', 'error');
+  if (!security.validateEmail(email)) return showToast('Noto\'g\'ri email', 'error');
+  auth.updateProfile({ username, email, avatar: username[0].toUpperCase() });
+  showToast('Profil yangilandi!', 'success');
+  renderApp();
+}
+
+async function changePassword() {
+  const oldPass = document.getElementById('oldPass')?.value;
+  const newPass = document.getElementById('newPass')?.value;
+  if (!oldPass || !newPass) return showToast('Maydonlarni to\'ldiring', 'error');
+  const oldHash = await security.hashPassword(oldPass);
+  if (oldHash !== auth.currentUser.passwordHash) return showToast('Hozirgi parol noto\'g\'ri', 'error');
+  if (newPass.length < 6) return showToast('Yangi parol kamida 6 belgi', 'error');
+  const newHash = await security.hashPassword(newPass);
+  auth.updateProfile({ passwordHash: newHash });
+  showToast('Parol o\'zgartirildi!', 'success');
+}
+
+function renderAdmin() {
+  const users = auth.getAllUsers();
+  const tests = testEngine.tests;
+
+  return `<div class="animate-fade" style="max-width:1000px;margin:0 auto">
+    <h2 style="margin-bottom:24px">🛡️ Admin paneli</h2>
+
+    <div class="dash-grid">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(124,58,237,.2)">👥</div><div class="stat-info"><div class="stat-value">${users.length}</div><div class="stat-label">Foydalanuvchilar</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,.2)">📝</div><div class="stat-info"><div class="stat-value">${tests.length}</div><div class="stat-label">Testlar</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,.2)">✅</div><div class="stat-info"><div class="stat-value">${tests.filter(t=>t.status==='active').length}</div><div class="stat-label">Aktiv testlar</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(59,130,246,.2)">👥</div><div class="stat-info"><div class="stat-value">${groupManager.groups.length}</div><div class="stat-label">Guruhlar</div></div></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">👥 Foydalanuvchilar</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Foydalanuvchi</th><th>Email</th><th>Rol</th><th>Testlar</th><th>Ball</th><th>Amallar</th></tr></thead>
+          <tbody>
+            ${users.map(u=>`<tr>
+              <td><strong>${security.sanitizeHTML(u.username)}</strong></td>
+              <td>${security.sanitizeHTML(u.email)}</td>
+              <td><span class="badge ${u.role==='admin'?'badge-accent':u.role==='teacher'?'badge-primary':'badge-info'}">${u.role}</span></td>
+              <td>${u.stats.testsTaken}</td>
+              <td>${u.stats.totalScore}</td>
+              <td>${u.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>`:'-'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">📝 Barcha testlar</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nomi</th><th>Yaratuvchi</th><th>Savollar</th><th>Holat</th><th>Kod</th><th>Amallar</th></tr></thead>
+          <tbody>
+            ${tests.map(t=>`<tr>
+              <td>${security.sanitizeHTML(t.title)}</td>
+              <td>${security.sanitizeHTML(t.createdByName||'')}</td>
+              <td>${t.questions.length}</td>
+              <td><span class="badge ${t.status==='active'?'badge-success':t.status==='waiting'?'badge-info':'badge-secondary'}">${t.status}</span></td>
+              <td><code>${t.roomCode}</code></td>
+              <td><button class="btn btn-sm btn-danger" onclick="testEngine.deleteTest('${t.id}');renderApp()">O'chirish</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">📊 Tizim ma'lumotlari</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.9rem">
+        <div>🔹 Versiya: <strong>${CONFIG.VERSION}</strong></div>
+        <div>🔹 Saqlash: <strong>localStorage</strong></div>
+        <div>🔹 Xavfsizlik: <strong>SHA-256 + AES-256</strong></div>
+        <div>🔹 Real-time: <strong>WebRTC (PeerJS)</strong></div>
+        <div>🔹 Foydalanuvchilar: <strong>${users.length}</strong></div>
+        <div>🔹 Jami testlar: <strong>${tests.length}</strong></div>
+      </div>
+      <button class="btn btn-danger btn-sm" style="margin-top:16px" onclick="if(confirm('Barcha ma\'lumotlarni o\'chirishni xohlaysizmi?')){storage.clear();location.reload()}">🗑️ Barcha ma'lumotlarni o'chirish</button>
+    </div>
+  </div>`;
+}
+
+function deleteUser(id) {
+  if (!confirm('Foydalanuvchini o\'chirishni xohlaysizmi?')) return;
+  auth.deleteUser(id);
+  renderApp();
+  showToast('Foydalanuvchi o\'chirildi', 'info');
+}
+
+function renderStats() {
+  const u = auth.currentUser;
+  const s = u.stats;
+  const percent = s.totalAnswers ? Math.round(s.correctAnswers / s.totalAnswers * 100) : 0;
+  const myTests = testEngine.getUserTests(u.id);
+
+  return `<div class="animate-fade" style="max-width:800px;margin:0 auto">
+    <h2 style="margin-bottom:24px">📊 Batafsil statistika</h2>
+
+    <div class="dash-grid">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(124,58,237,.2)">📝</div><div class="stat-info"><div class="stat-value">${s.testsTaken}</div><div class="stat-label">Topshirilgan</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,.2)">✏️</div><div class="stat-info"><div class="stat-value">${s.testsCreated}</div><div class="stat-label">Tuzilgan</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,.2)">⭐</div><div class="stat-info"><div class="stat-value">${s.totalScore}</div><div class="stat-label">Jami ball</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(59,130,246,.2)">✅</div><div class="stat-info"><div class="stat-value">${percent}%</div><div class="stat-label">To'g'ri javob</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,.2)">🔥</div><div class="stat-info"><div class="stat-value">${s.streak}</div><div class="stat-label">Ketma-ket kun</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(168,85,247,.2)">🏅</div><div class="stat-info"><div class="stat-value">${s.bestStreak}</div><div class="stat-label">Eng yaxshi streak</div></div></div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h3 style="margin-bottom:16px">📈 To'g'ri javob foizi</h3>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--success) ${percent}%,var(--bg3) ${percent}%);display:flex;align-items:center;justify-content:center">
+          <div style="width:90px;height:90px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800">${percent}%</div>
+        </div>
+        <div>
+          <p style="font-size:.9rem;color:var(--text2)">To'g'ri javoblar: <strong style="color:var(--success)">${s.correctAnswers}</strong></p>
+          <p style="font-size:.9rem;color:var(--text2)">Noto'g'ri javoblar: <strong style="color:var(--danger)">${s.totalAnswers - s.correctAnswers}</strong></p>
+          <p style="font-size:.9rem;color:var(--text2)">Jami javoblar: <strong>${s.totalAnswers}</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h3 style="margin-bottom:16px">📋 Mening testlarim</h3>
+      ${myTests.length?`<div class="table-wrap"><table>
+        <thead><tr><th>Nomi</th><th>Savollar</th><th>Holat</th><th>Kod</th></tr></thead>
+        <tbody>${myTests.map(t=>`<tr>
+          <td>${security.sanitizeHTML(t.title)}</td><td>${t.questions.length}</td>
+          <td><span class="badge ${t.status==='active'?'badge-success':'badge-secondary'}">${t.status}</span></td>
+          <td><code>${t.roomCode}</code></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`:'<p style="color:var(--text3)">Hali test tuzmagansiz</p>'}
+    </div>
+  </div>`;
+}
+
+// ==================== MODALS ====================
+function showModal(title, content, footer = '') {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="modal">
+    <div class="modal-header"><h3 class="modal-title">${title}</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <div class="modal-body">${content}</div>
+    ${footer?`<div class="modal-footer">${footer}</div>`:''}
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function showCreateGroupModal() {
+  showModal('Yangi guruh yaratish', `
+    <div class="form-group"><label class="form-label">Guruh nomi</label><input class="form-input" id="newGroupName" placeholder="Guruh nomi..."></div>
+    <div class="form-group"><label class="form-label">Tavsif</label><textarea class="form-input" id="newGroupDesc" placeholder="Guruh haqida..."></textarea></div>
+    <div class="form-group"><label class="form-label">Ikonka</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${['📚','🎓','🔬','💻','🎨','⚽','🎵','🌍','📐','🧪'].map(i=>`<button class="btn btn-sm btn-secondary" onclick="document.getElementById('newGroupIcon').value='${i}';this.parentElement.querySelectorAll('button').forEach(b=>b.style.borderColor='');this.style.borderColor='var(--primary)'">${i}</button>`).join('')}
+      <input type="hidden" id="newGroupIcon" value="📚"></div>
+    </div>
+  `, `<button class="btn btn-primary" onclick="handleCreateGroup()">Yaratish</button>`);
+}
+
+function handleCreateGroup() {
+  const name = document.getElementById('newGroupName')?.value?.trim();
+  const desc = document.getElementById('newGroupDesc')?.value?.trim();
+  const icon = document.getElementById('newGroupIcon')?.value || '📚';
+  if (!name) return showToast('Guruh nomini kiriting', 'error');
+  const group = groupManager.create(name, desc, icon);
+  document.querySelector('.modal-overlay')?.remove();
+  showToast('Guruh yaratildi!', 'success');
+  navigate('group-detail', { groupId: group.id });
+}
+
+function showJoinGroupModal() {
+  showModal('Guruhga qo\'shilish', `
+    <div class="form-group"><label class="form-label">Taklif kodi</label><input class="form-input" id="joinGroupCode" placeholder="Taklif kodini kiriting..." maxlength="6" style="text-transform:uppercase"></div>
+  `, `<button class="btn btn-primary" onclick="handleJoinGroup()">Qo'shilish</button>`);
+}
+
+function handleJoinGroup() {
+  const code = document.getElementById('joinGroupCode')?.value?.trim().toUpperCase();
+  if (!code) return showToast('Taklif kodini kiriting', 'error');
+  const result = groupManager.join(code);
+  if (result.ok) {
+    document.querySelector('.modal-overlay')?.remove();
+    showToast('Guruhga qo\'shildingiz!', 'success');
+    navigate('group-detail', { groupId: result.group.id });
+  } else {
+    showToast(result.error, 'error');
+  }
+}
+
+// ==================== EVENT HANDLERS ====================
+async function handleLogin() {
+  const user = document.getElementById('loginUser')?.value?.trim();
+  const pass = document.getElementById('loginPass')?.value;
+  if (!user || !pass) return showToast('Maydonlarni to\'ldiring', 'error');
+  if (!security.rateLimit('login')) return showToast('Juda ko\'p urinish. Biroz kuting', 'warning');
+  const result = await auth.login(user, pass);
+  if (result.ok) { showToast('Xush kelibsiz!', 'success'); navigate('dashboard'); }
+  else showToast(result.error, 'error');
+}
+
+async function handleRegister() {
+  const user = document.getElementById('regUser')?.value?.trim();
+  const email = document.getElementById('regEmail')?.value?.trim();
+  const pass = document.getElementById('regPass')?.value;
+  const role = document.getElementById('regRole')?.value;
+  if (!user || !email || !pass) return showToast('Barcha maydonlarni to\'ldiring', 'error');
+  const result = await auth.register(user, email, pass, role);
+  if (result.ok) { showToast('Muvaffaqiyatli ro\'yxatdan o\'tdingiz!', 'success'); navigate('dashboard'); }
+  else showToast(result.error, 'error');
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Nusxalandi: ' + text, 'success')).catch(() => showToast('Nusxalashda xato', 'error'));
+}
+
+function attachEvents() {
+  // Close notification panel on outside click
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('notifPanel');
+    if (panel?.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.nav-user')) {
+      panel.classList.remove('open');
+    }
+  });
+
+  // Keyboard shortcuts
+  document.onkeydown = e => {
+    if (e.key === 'Escape') {
+      document.querySelector('.modal-overlay')?.remove();
+      document.getElementById('notifPanel')?.classList.remove('open');
+    }
+  };
+}
+
+// ==================== AUTO-SAVE & STREAK ====================
+setInterval(() => {
+  if (auth.currentUser) {
+    const last = auth.currentUser.stats.lastActive;
+    const now = Date.now();
+    const daysDiff = Math.floor((now - last) / 86400000);
+    if (daysDiff === 1) {
+      auth.updateStats({ streak: auth.currentUser.stats.streak + 1, bestStreak: Math.max(auth.currentUser.stats.streak + 1, auth.currentUser.stats.bestStreak || 0) });
+      achievementManager.check();
+    } else if (daysDiff > 1) {
+      auth.updateStats({ streak: 1 });
+    }
+  }
+}, CONFIG.AUTO_SAVE_INTERVAL);
+
+// ==================== INACTIVITY CHECK ====================
+let inactivityTimer;
+function resetInactivity() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => {
+    if (auth.isLoggedIn()) {
+      showToast('Muddatsiz faollik tufayli chiqdingiz', 'warning');
+      auth.logout();
+    }
+  }, CONFIG.INACTIVITY_TIMEOUT);
+}
+['mousedown','mousemove','keypress','scroll','touchstart'].forEach(e => document.addEventListener(e, resetInactivity, { passive: true }));
+
+// ==================== SERVICE WORKER (PWA) ====================
+if ('serviceWorker' in navigator) {
+  const swCode = `self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));`;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+// ==================== INIT ====================
+notifManager.requestPermission();
+
+// Demo admin user if none exists
+if (auth.getAllUsers().length === 0) {
+  auth.register('admin', 'admin@zakovat.uz', 'admin123', 'admin');
+}
+
+window.addEventListener('load', () => {
+  const hash = window.location.hash.slice(1);
+  if (hash) currentPage = hash;
+  renderApp();
+});
 </script>
 </body>
 </html>
