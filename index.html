@@ -493,14 +493,40 @@ class AuthManager {
   constructor() {
     this.currentUser = storage.get('currentUser', null);
     this.users = storage.get('users', []);
+    // Admin maxsus kodlari - faqat bu kod orqali admin bo'lish mumkin
+    this.ADMIN_CODES = storage.get('adminCodes', ['ZAKOVAT2024', 'ADMIN777', 'SUPER123']);
   }
 
-  async register(username, email, password, role = 'student') {
+  verifyAdminCode(code) {
+    return this.ADMIN_CODES.includes(code.toUpperCase());
+  }
+
+  addAdminCode(code) {
+    if (!this.ADMIN_CODES.includes(code.toUpperCase())) {
+      this.ADMIN_CODES.push(code.toUpperCase());
+      storage.set('adminCodes', this.ADMIN_CODES);
+    }
+  }
+
+  removeAdminCode(code) {
+    this.ADMIN_CODES = this.ADMIN_CODES.filter(c => c !== code.toUpperCase());
+    storage.set('adminCodes', this.ADMIN_CODES);
+  }
+
+  async register(username, email, password, role = 'student', adminCode = '') {
     if (!security.validateUsername(username)) return { ok: false, error: 'Foydalanuvchi nomi 3-30 belgi, faqat harflar, raqamlar va _' };
     if (!security.validateEmail(email)) return { ok: false, error: 'Email manzil noto\'g\'ri' };
     if (password.length < 6) return { ok: false, error: 'Parol kamida 6 belgi bo\'lishi kerak' };
     if (this.users.find(u => u.username === username)) return { ok: false, error: 'Bu foydalanuvchi nomi band' };
     if (this.users.find(u => u.email === email)) return { ok: false, error: 'Bu email band' };
+
+    // Agar admin yoki o'qituvchi bo'lishni xohlasa, kod talab qilinadi
+    let finalRole = 'student';
+    if (role === 'admin' || role === 'teacher') {
+      if (!adminCode) return { ok: false, error: 'Admin/O\'qituvchi bo\'lish uchun maxsus kod talab qilinadi' };
+      if (!this.verifyAdminCode(adminCode)) return { ok: false, error: 'Admin kodi noto\'g\'ri! Admin bo\'lish uchun ruxsat kodingiz bo\'lishi kerak' };
+      finalRole = role;
+    }
 
     const hash = await security.hashPassword(password);
     const user = {
@@ -508,7 +534,7 @@ class AuthManager {
       username,
       email,
       passwordHash: hash,
-      role,
+      role: finalRole,
       avatar: username[0].toUpperCase(),
       createdAt: Date.now(),
       stats: { testsCreated: 0, testsTaken: 0, totalScore: 0, correctAnswers: 0, totalAnswers: 0, streak: 0, bestStreak: 0, lastActive: Date.now() },
@@ -560,7 +586,9 @@ class AuthManager {
 
   isLoggedIn() { return !!this.currentUser; }
 
-  isAdmin() { return this.currentUser?.role === 'admin' || this.currentUser?.role === 'teacher'; }
+  isAdmin() { return this.currentUser?.role === 'admin'; }
+  isTeacher() { return this.currentUser?.role === 'teacher'; }
+  isStaff() { return this.currentUser?.role === 'admin' || this.currentUser?.role === 'teacher'; }
 
   getAllUsers() { return this.users; }
 
@@ -1030,19 +1058,22 @@ window.addEventListener('hashchange', () => {
 // ==================== RENDER ENGINE ====================
 function renderApp() {
   const app = document.getElementById('app');
+  // Kirmagan odamni majburan login/register'ga yo'naltirish
+  if (!auth.isLoggedIn() && !['login','register'].includes(currentPage)) {
+    currentPage = 'login';
+  }
   app.innerHTML = renderNavbar() + `<div class="main">${renderPage()}</div>`;
   attachEvents();
   if (auth.isLoggedIn()) achievementManager.check();
 }
 
 function renderNavbar() {
-  if (!auth.isLoggedIn() && ['home', 'login', 'register'].includes(currentPage)) {
+  if (!auth.isLoggedIn()) {
     return `<nav class="navbar">
-      <div class="nav-brand" onclick="navigate('home')"><div class="logo">Z</div> Zakovat</div>
+      <div class="nav-brand" onclick="navigate('login')"><div class="logo">Z</div> Zakovat</div>
       <div class="nav-links" id="navLinks">
-        <button class="nav-link ${currentPage==='home'?'active':''}" onclick="navigate('home')">Bosh sahifa</button>
-        <button class="nav-link" onclick="navigate('login')">Kirish</button>
-        <button class="nav-link" onclick="navigate('register')">Ro'yxat</button>
+        <button class="nav-link ${currentPage==='login'?'active':''}" onclick="navigate('login')">Kirish</button>
+        <button class="nav-link ${currentPage==='register'?'active':''}" onclick="navigate('register')">Ro'yxatdan o'tish</button>
       </div>
       <button class="nav-hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
     </nav>`;
@@ -1058,7 +1089,7 @@ function renderNavbar() {
       <button class="nav-link ${currentPage==='leaderboard'?'active':''}" onclick="navigate('leaderboard')">Reyting</button>
       <button class="nav-link ${currentPage==='groups'?'active':''}" onclick="navigate('groups')">Guruhlar</button>
       <button class="nav-link ${currentPage==='achievements'?'active':''}" onclick="navigate('achievements')">Yutuqlar</button>
-      ${auth.isAdmin()?`<button class="nav-link ${currentPage==='admin'?'active':''}" onclick="navigate('admin')">Admin</button>`:''}
+      ${auth.isStaff()?`<button class="nav-link ${currentPage==='admin'?'active':''}" onclick="navigate('admin')">${auth.isAdmin()?'🛡️ Admin':'📋 Boshqaruv'}</button>`:''}
     </div>
     <div class="nav-user">
       <button class="btn-icon btn-secondary" onclick="toggleNotifPanel()" title="Bildirishnomalar">${unread?`<span class="badge badge-danger" style="position:absolute;top:-4px;right:-4px;font-size:.65rem">${unread}</span>`:''}🔔</button>
@@ -1084,24 +1115,27 @@ function toggleNotifPanel() {
 }
 
 function renderPage() {
+  // Kirmagan odam faqat login yoki register ko'ra oladi
+  if (!auth.isLoggedIn() && !['login','register'].includes(currentPage)) {
+    currentPage = 'login';
+  }
   switch(currentPage) {
-    case 'home': return renderHome();
     case 'login': return renderLogin();
     case 'register': return renderRegister();
-    case 'dashboard': return auth.isLoggedIn() ? renderDashboard() : (navigate('home'), '');
+    case 'dashboard': return auth.isLoggedIn() ? renderDashboard() : (navigate('login'), '');
     case 'create-test': return auth.isLoggedIn() ? renderCreateTest() : (navigate('login'), '');
     case 'join-test': return auth.isLoggedIn() ? renderJoinTest() : (navigate('login'), '');
     case 'test-room': return auth.isLoggedIn() ? renderTestRoom() : (navigate('login'), '');
     case 'test-active': return auth.isLoggedIn() ? renderActiveTest() : (navigate('login'), '');
     case 'test-results': return auth.isLoggedIn() ? renderTestResults() : (navigate('login'), '');
-    case 'leaderboard': return renderLeaderboard();
+    case 'leaderboard': return auth.isLoggedIn() ? renderLeaderboard() : (navigate('login'), '');
     case 'groups': return auth.isLoggedIn() ? renderGroups() : (navigate('login'), '');
     case 'group-detail': return auth.isLoggedIn() ? renderGroupDetail() : (navigate('login'), '');
     case 'achievements': return auth.isLoggedIn() ? renderAchievements() : (navigate('login'), '');
     case 'profile': return auth.isLoggedIn() ? renderProfile() : (navigate('login'), '');
-    case 'admin': return auth.isAdmin() ? renderAdmin() : (navigate('dashboard'), '');
+    case 'admin': return auth.isStaff() ? renderAdmin() : (navigate('dashboard'), '');
     case 'stats': return auth.isLoggedIn() ? renderStats() : (navigate('login'), '');
-    default: return renderHome();
+    default: return auth.isLoggedIn() ? renderDashboard() : renderLogin();
   }
 }
 
@@ -1143,31 +1177,54 @@ function renderHome() {
 }
 
 function renderLogin() {
-  return `<div style="max-width:420px;margin:40px auto" class="animate-fade">
+  const users = auth.getAllUsers();
+  return `<div style="max-width:440px;margin:40px auto" class="animate-fade">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:3.5rem;margin-bottom:12px">🎓</div>
+      <h1 style="font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--primary2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Zakovat</h1>
+      <p style="color:var(--text3);margin-top:4px">Interaktiv test platformasi</p>
+    </div>
     <div class="card">
-      <h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">🔐 Tizimga kirish</h2>
+      <h2 style="text-align:center;margin-bottom:24px;font-size:1.3rem">🔐 Tizimga kirish</h2>
       <div class="form-group">
         <label class="form-label">Foydalanuvchi nomi yoki email</label>
-        <input class="form-input" id="loginUser" placeholder="Username yoki email..." autocomplete="username">
+        <input class="form-input" id="loginUser" placeholder="Username yoki email..." autocomplete="username" onkeypress="if(event.key==='Enter')document.getElementById('loginPass').focus()">
       </div>
       <div class="form-group">
         <label class="form-label">Parol</label>
-        <input class="form-input" id="loginPass" type="password" placeholder="Parol..." autocomplete="current-password">
+        <div style="position:relative">
+          <input class="form-input" id="loginPass" type="password" placeholder="Parol..." autocomplete="current-password" onkeypress="if(event.key==='Enter')handleLogin()" style="padding-right:44px">
+          <button onclick="togglePassVisibility('loginPass',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:1.1rem;padding:4px">👁️</button>
+        </div>
       </div>
       <button class="btn btn-primary btn-block btn-lg" onclick="handleLogin()">Kirish</button>
-      <p style="text-align:center;margin-top:16px;color:var(--text3)">
-        Hisob yo'qmi? <a href="#register" onclick="navigate('register')">Ro'yxatdan o'ting</a>
-      </p>
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <p style="color:var(--text3);margin-bottom:8px">Hisobingiz yo'qmi?</p>
+        <button class="btn btn-success btn-block" onclick="navigate('register')">📝 Ro'yxatdan o'tish</button>
+      </div>
     </div>
+    ${users.length===0?'<div class="card" style="margin-top:16px;text-align:center"><p style="color:var(--accent);font-size:.9rem">🛡️ Birinchi foydalanuvchi admin hisobiga aylanadi</p></div>':''}
   </div>`;
 }
 
+function togglePassVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁️'; }
+}
+
 function renderRegister() {
+  const isFirstChild = auth.getAllUsers().length === 0;
   return `<div style="max-width:480px;margin:40px auto" class="animate-fade">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:3.5rem;margin-bottom:12px">🎓</div>
+      <h1 style="font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--primary2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Zakovat</h1>
+      <p style="color:var(--text3);margin-top:4px">Interaktiv test platformasi</p>
+    </div>
     <div class="card">
-      <h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">📝 Ro'yxatdan o'tish</h2>
+      <h2 style="text-align:center;margin-bottom:24px;font-size:1.3rem">📝 Ro'yxatdan o'tish</h2>
       <div class="form-group">
-        <label class="form-label">Foydalanuvchi nomi</label>
+        <label class="form-label">Ismingiz (Foydalanuvchi nomi)</label>
         <input class="form-input" id="regUser" placeholder="3-30 belgi, harflar, raqamlar, _" autocomplete="username">
       </div>
       <div class="form-group">
@@ -1176,22 +1233,71 @@ function renderRegister() {
       </div>
       <div class="form-group">
         <label class="form-label">Parol</label>
-        <input class="form-input" id="regPass" type="password" placeholder="Kamida 6 belgi" autocomplete="new-password" oninput="updatePasswordStrength(this.value)">
+        <div style="position:relative">
+          <input class="form-input" id="regPass" type="password" placeholder="Kamida 6 belgi" autocomplete="new-password" oninput="updatePasswordStrength(this.value)" style="padding-right:44px">
+          <button onclick="togglePassVisibility('regPass',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:1.1rem;padding:4px">👁️</button>
+        </div>
         <div id="passStrength" style="margin-top:8px;font-size:.85rem"></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Rol</label>
-        <select class="form-input" id="regRole">
-          <option value="student">O'quvchi</option>
-          <option value="teacher">O'qituvchi</option>
-        </select>
+        <label class="form-label">Parolni tasdiqlash</label>
+        <div style="position:relative">
+          <input class="form-input" id="regPassConfirm" type="password" placeholder="Parolni qayta kiriting..." autocomplete="new-password" onkeypress="if(event.key==='Enter')handleRegister()" style="padding-right:44px">
+          <button onclick="togglePassVisibility('regPassConfirm',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:1.1rem;padding:4px">👁️</button>
+        </div>
       </div>
+
+      <!-- Rol tanlash - oddiy odam faqat o'quvchi -->
+      <div class="form-group">
+        <label class="form-label">Rol tanlang</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="roleSelector">
+          <button class="btn btn-primary role-btn" data-role="student" onclick="selectRole('student',this)" style="flex-direction:column;padding:16px 8px">
+            <span style="font-size:1.5rem">🎓</span>
+            <span style="font-size:.85rem;margin-top:4px">O'quvchi</span>
+          </button>
+          <button class="btn btn-secondary role-btn" data-role="teacher" onclick="selectRole('teacher',this)" style="flex-direction:column;padding:16px 8px">
+            <span style="font-size:1.5rem">👨‍🏫</span>
+            <span style="font-size:.85rem;margin-top:4px">O'qituvchi</span>
+          </button>
+          <button class="btn btn-secondary role-btn" data-role="admin" onclick="selectRole('admin',this)" style="flex-direction:column;padding:16px 8px">
+            <span style="font-size:1.5rem">🛡️</span>
+            <span style="font-size:.85rem;margin-top:4px">Admin</span>
+          </button>
+        </div>
+        <input type="hidden" id="regRole" value="student">
+      </div>
+
+      <!-- Admin/O'qituvchi kodi - faqat ular uchun ko'rinadi -->
+      <div class="form-group" id="adminCodeGroup" style="display:none">
+        <label class="form-label">🔑 Maxsus ruxsat kodi</label>
+        <input class="form-input" id="regAdminCode" type="password" placeholder="Admin/O'qituvchi kodini kiriting...">
+        <p style="color:var(--text4);font-size:.8rem;margin-top:6px">⚠️ Admin yoki o'qituvchi bo'lish uchun maxsus ruxsat kodi kerak. Kod yo'q bo'lsa, o'quvchi sifatida ro'yxatdan o'ting.</p>
+      </div>
+
+      ${isFirstChild?'<div class="card" style="margin-bottom:16px;background:rgba(245,158,11,.1);border-color:var(--accent)"><p style="color:var(--accent);font-size:.9rem;text-align:center">🛡️ Siz birinchi foydalanuvchisiz — avtomatik admin bo'lasiz!</p></div>':''}
+
       <button class="btn btn-primary btn-block btn-lg" onclick="handleRegister()">Ro'yxatdan o'tish</button>
-      <p style="text-align:center;margin-top:16px;color:var(--text3)">
-        Hisobingiz bormi? <a href="#login" onclick="navigate('login')">Kirish</a>
-      </p>
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <p style="color:var(--text3);margin-bottom:8px">Hisobingiz bormi?</p>
+        <button class="btn btn-secondary btn-block" onclick="navigate('login')">🔐 Kirish</button>
+      </div>
     </div>
   </div>`;
+}
+
+let selectedRole = 'student';
+function selectRole(role, btn) {
+  selectedRole = role;
+  document.getElementById('regRole').value = role;
+  document.querySelectorAll('.role-btn').forEach(b => {
+    b.className = 'btn btn-secondary role-btn';
+    b.style.flexDirection = 'column';
+    b.style.padding = '16px 8px';
+  });
+  btn.className = 'btn btn-primary role-btn';
+  // Admin/teacher kodi maydonini ko'rsatish yoki yashirish
+  const codeGroup = document.getElementById('adminCodeGroup');
+  if (codeGroup) codeGroup.style.display = (role === 'admin' || role === 'teacher') ? 'block' : 'none';
 }
 
 function updatePasswordStrength(pass) {
@@ -1790,7 +1896,7 @@ function renderProfile() {
       <div class="profile-avatar">${u.avatar}</div>
       <div class="profile-info">
         <div class="profile-name">${security.sanitizeHTML(u.username)}</div>
-        <div class="profile-role">${u.role === 'admin' ? '🔴 Admin' : u.role === 'teacher' ? '🟡 O\'qituvchi' : '🟢 O\'quvchi'}</div>
+        <div class="profile-role">${u.role === 'admin' ? '🛡️ Admin — To\'liq boshqaruv huquqi' : u.role === 'teacher' ? '👨‍🏫 O\'qituvchi — Test tuzish va boshqarish' : '🎓 O\'quvchi — Test topshirish'}</div>
         <div class="profile-stats">
           <div class="profile-stat"><div class="profile-stat-value">${s.totalScore}</div><div class="profile-stat-label">Ball</div></div>
           <div class="profile-stat"><div class="profile-stat-value">${s.testsTaken}</div><div class="profile-stat-label">Testlar</div></div>
@@ -1885,25 +1991,6 @@ function renderAdmin() {
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title">👥 Foydalanuvchilar</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Foydalanuvchi</th><th>Email</th><th>Rol</th><th>Testlar</th><th>Ball</th><th>Amallar</th></tr></thead>
-          <tbody>
-            ${users.map(u=>`<tr>
-              <td><strong>${security.sanitizeHTML(u.username)}</strong></td>
-              <td>${security.sanitizeHTML(u.email)}</td>
-              <td><span class="badge ${u.role==='admin'?'badge-accent':u.role==='teacher'?'badge-primary':'badge-info'}">${u.role}</span></td>
-              <td>${u.stats.testsTaken}</td>
-              <td>${u.stats.totalScore}</td>
-              <td>${u.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>`:'-'}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="admin-section">
       <div class="admin-section-title">📝 Barcha testlar</div>
       <div class="table-wrap">
         <table>
@@ -1922,6 +2009,41 @@ function renderAdmin() {
       </div>
     </div>
 
+    ${auth.isAdmin()?`<div class="admin-section">
+      <div class="admin-section-title">🔑 Admin kodlarni boshqarish</div>
+      <p style="color:var(--text3);margin-bottom:12px;font-size:.9rem">Ushbu kodlar orqali yangi foydalanuvchilar admin yoki o'qituvchi sifatida ro'yxatdan o'tishi mumkin</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+        ${auth.ADMIN_CODES.map(code=>`<div style="display:flex;align-items:center;gap:6px;background:var(--bg);padding:8px 12px;border-radius:8px;border:1px solid var(--border)">
+          <code style="color:var(--accent);font-size:.9rem;letter-spacing:2px">${code}</code>
+          <button class="btn btn-sm btn-danger" onclick="auth.removeAdminCode('${code}');renderApp()" style="padding:4px 8px;font-size:.75rem">✕</button>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="newAdminCode" placeholder="Yangi admin kodi..." style="max-width:250px">
+        <button class="btn btn-primary btn-sm" onclick="addNewAdminCode()">+ Qo'shish</button>
+      </div>
+    </div>`:''}
+
+    <div class="admin-section">
+      <div class="admin-section-title">👥 Foydalanuvchilarni boshqarish</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Foydalanuvchi</th><th>Email</th><th>Rol</th><th>Testlar</th><th>Ball</th><th>Ro'yxatdan</th><th>Amallar</th></tr></thead>
+          <tbody>
+            ${users.map(u=>`<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="player-avatar" style="width:28px;height:28px;font-size:.7rem">${(u.username||'?')[0].toUpperCase()}</div><strong>${security.sanitizeHTML(u.username)}</strong></div></td>
+              <td style="font-size:.85rem">${security.sanitizeHTML(u.email)}</td>
+              <td>${auth.isAdmin()&&u.id!==auth.currentUser?.id?`<select class="form-input" style="padding:4px 8px;font-size:.8rem" onchange="changeUserRole('${u.id}',this.value)"><option value="student" ${u.role==='student'?'selected':''}>🎓 O'quvchi</option><option value="teacher" ${u.role==='teacher'?'selected':''}>👨‍🏫 O'qituvchi</option><option value="admin" ${u.role==='admin'?'selected':''}>🛡️ Admin</option></select>`:`<span class="badge ${u.role==='admin'?'badge-accent':u.role==='teacher'?'badge-primary':'badge-info'}">${u.role==='admin'?'🛡️ Admin':u.role==='teacher'?'👨‍🏫 O\'qituvchi':'🎓 O\'quvchi'}</span>`}</td>
+              <td>${u.stats.testsTaken}</td>
+              <td>${u.stats.totalScore}</td>
+              <td style="font-size:.8rem;color:var(--text3)">${new Date(u.createdAt).toLocaleDateString('uz-UZ')}</td>
+              <td>${u.id!==auth.currentUser?.id?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>`:'<span class="badge badge-accent">Siz</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="admin-section">
       <div class="admin-section-title">📊 Tizim ma'lumotlari</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.9rem">
@@ -1931,8 +2053,10 @@ function renderAdmin() {
         <div>🔹 Real-time: <strong>WebRTC (PeerJS)</strong></div>
         <div>🔹 Foydalanuvchilar: <strong>${users.length}</strong></div>
         <div>🔹 Jami testlar: <strong>${tests.length}</strong></div>
+        <div>🔹 Admin kodlar: <strong>${auth.ADMIN_CODES.length}</strong></div>
+        <div>🔹 O'qituvchilar: <strong>${users.filter(u=>u.role==='teacher').length}</strong></div>
       </div>
-      <button class="btn btn-danger btn-sm" style="margin-top:16px" onclick="if(confirm('Barcha ma\'lumotlarni o\'chirishni xohlaysizmi?')){storage.clear();location.reload()}">🗑️ Barcha ma'lumotlarni o'chirish</button>
+      <button class="btn btn-danger btn-sm" style="margin-top:16px" onclick="if(confirm('Barcha ma\\'lumotlarni o\\'chirishni xohlaysizmi?')){storage.clear();location.reload()}">🗑️ Barcha ma'lumotlarni o'chirish</button>
     </div>
   </div>`;
 }
@@ -1942,6 +2066,34 @@ function deleteUser(id) {
   auth.deleteUser(id);
   renderApp();
   showToast('Foydalanuvchi o\'chirildi', 'info');
+}
+
+function addNewAdminCode() {
+  const input = document.getElementById('newAdminCode');
+  if (!input) return;
+  const code = input.value.trim().toUpperCase();
+  if (!code || code.length < 4) return showToast('Kod kamida 4 belgi bo\'lishi kerak', 'error');
+  auth.addAdminCode(code);
+  input.value = '';
+  renderApp();
+  showToast('Admin kod qo\'shildi: ' + code, 'success');
+}
+
+function changeUserRole(userId, newRole) {
+  if (!auth.isAdmin()) return showToast('Faqat admin rol o\'zgartira oladi', 'error');
+  const users = auth.getAllUsers();
+  const user = users.find(u => u.id === userId);
+  if (!user) return;
+  const oldRole = user.role;
+  user.role = newRole;
+  storage.set('users', users);
+  // Agar bu foydalanuvchi hozir tizimda bo'lsa, uning ma'lumotlarini yangilash
+  if (auth.currentUser?.id === userId) {
+    auth.currentUser.role = newRole;
+    storage.set('currentUser', auth.currentUser);
+  }
+  renderApp();
+  showToast(`${user.username} roli o'zgartirildi: ${oldRole} → ${newRole}`, 'success');
 }
 
 function renderStats() {
@@ -2051,19 +2203,47 @@ async function handleLogin() {
   if (!user || !pass) return showToast('Maydonlarni to\'ldiring', 'error');
   if (!security.rateLimit('login')) return showToast('Juda ko\'p urinish. Biroz kuting', 'warning');
   const result = await auth.login(user, pass);
-  if (result.ok) { showToast('Xush kelibsiz!', 'success'); navigate('dashboard'); }
-  else showToast(result.error, 'error');
+  if (result.ok) {
+    const role = result.user.role;
+    const roleEmoji = role === 'admin' ? '🛡️' : role === 'teacher' ? '👨‍🏫' : '🎓';
+    const roleName = role === 'admin' ? 'Admin' : role === 'teacher' ? 'O\'qituvchi' : 'O\'quvchi';
+    showToast(`${roleEmoji} Xush kelibsiz, ${result.user.username}! (${roleName})`, 'success');
+    navigate('dashboard');
+  } else showToast(result.error, 'error');
 }
 
 async function handleRegister() {
   const user = document.getElementById('regUser')?.value?.trim();
   const email = document.getElementById('regEmail')?.value?.trim();
   const pass = document.getElementById('regPass')?.value;
-  const role = document.getElementById('regRole')?.value;
+  const passConfirm = document.getElementById('regPassConfirm')?.value;
+  const role = document.getElementById('regRole')?.value || 'student';
+  const adminCode = document.getElementById('regAdminCode')?.value?.trim() || '';
+
   if (!user || !email || !pass) return showToast('Barcha maydonlarni to\'ldiring', 'error');
-  const result = await auth.register(user, email, pass, role);
-  if (result.ok) { showToast('Muvaffaqiyatli ro\'yxatdan o\'tdingiz!', 'success'); navigate('dashboard'); }
-  else showToast(result.error, 'error');
+  if (pass !== passConfirm) return showToast('Parollar mos kelmayapti!', 'error');
+  if (pass.length < 6) return showToast('Parol kamida 6 belgi bo\'lishi kerak', 'error');
+
+  // Birinchi foydalanuvchi avtomatik admin
+  const isFirstChild = auth.getAllUsers().length === 0;
+  const finalRole = isFirstChild ? 'admin' : role;
+  const finalAdminCode = isFirstChild ? '' : adminCode;
+
+  const result = await auth.register(user, email, pass, finalRole, finalAdminCode);
+  if (result.ok) {
+    if (isFirstChild) {
+      showToast('🛡️ Admin sifatida ro\'yxatdan o\'tdingiz!', 'success');
+    } else if (finalRole === 'student') {
+      showToast('🎓 O\'quvchi sifatida ro\'yxatdan o\'tdingiz!', 'success');
+    } else if (finalRole === 'teacher') {
+      showToast('👨‍🏫 O\'qituvchi sifatida ro\'yxatdan o\'tdingiz!', 'success');
+    } else if (finalRole === 'admin') {
+      showToast('🛡️ Admin sifatida ro\'yxatdan o\'tdingiz!', 'success');
+    }
+    navigate('dashboard');
+  } else {
+    showToast(result.error, 'error');
+  }
 }
 
 function copyToClipboard(text) {
@@ -2127,10 +2307,8 @@ if ('serviceWorker' in navigator) {
 // ==================== INIT ====================
 notifManager.requestPermission();
 
-// Demo admin user if none exists
-if (auth.getAllUsers().length === 0) {
-  auth.register('admin', 'admin@zakovat.uz', 'admin123', 'admin');
-}
+// Birinchi foydalanuvchi avtomatik admin bo'ladi - demo hisob yaratish shart emas
+// Admin kodlari: ZAKOVAT2024, ADMIN777, SUPER123
 
 window.addEventListener('load', () => {
   const hash = window.location.hash.slice(1);
